@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TEZ</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  /* ===================== ТЕМЫ =====================
+     Палитра сдержанная: индиго + фиолетовый, без карнавальных цветов.
+     Акцент используется точечно — на главном действии и статусах.      */
+  /* Палитра взята с логотипа: оранжево-золотой на почти чёрном.
+     Тёмная тема — основная, именно в ней бренд выглядит как задумано. */
+  :root[data-theme="dark"], :root{
+    --bg:#0A0A0D;
+    --card:#141419;
+    --card-2:#1C1C23;
+    --stroke:rgba(255,255,255,.09);
+    --text:#F5F5F7;
+    --muted:#8A8A95;
+    --nav-bg:rgba(13,13,17,.94);
+    --sw-on:#FF9500;
+    --sw-off:#32323C;
+    --solid:#FFFFFF;          /* сплошная кнопка */
+    --solid-text:#0A0A0D;
+    --accent:#FFA61A;
+    --promo-bg:#17171D;
+    --hint-bg:#1F1810;
+    --hint-line:#FF9500;
+    --shadow:0 14px 40px -14px rgba(0,0,0,.75);
+  }
+  :root[data-theme="light"]{
+    --bg:#F4F4F6;
+    --card:#FFFFFF;
+    --card-2:#F6F5F3;
+    --stroke:rgba(16,14,10,.09);
+    --text:#121114;
+    --muted:#76757F;
+    --nav-bg:rgba(255,255,255,.94);
+    --sw-on:#E07B00;
+    --sw-off:#DEDDE3;
+    --solid:#121114;
+    --solid-text:#FFFFFF;
+    --accent:#C2660A;         /* тёмный оранжевый — читается на белом */
+    --promo-bg:#EFEDEA;
+    --hint-bg:#FDF3E3;
+    --hint-line:#FF9500;
+    --shadow:0 10px 30px -14px rgba(16,14,10,.25);
+  }
+  :root{
+    --grad:linear-gradient(135deg,#FF6A00 0%,#FF9500 45%,#FFC13B 100%);
+    --glow:0 8px 26px -8px rgba(255,138,0,.65);
+    --radius:18px;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text);
+    min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased;
+    padding-bottom:104px;
+    transition:background .2s ease, color .2s ease;
+  }
+  .app{max-width:520px;margin:0 auto;padding:12px 16px;}
+  svg{display:block;flex:none;}
+
+  /* ===================== ШАПКА ===================== */
+  .top{display:flex;align-items:center;gap:8px;margin:4px 0 20px;}
+  .brand{display:flex;align-items:center;gap:9px;margin-right:auto;}
+  .brand .mark{width:30px;height:30px;flex:none;filter:drop-shadow(0 2px 8px rgba(255,138,0,.45));}
+  .brand .wm{
+    font-size:23px;font-weight:900;letter-spacing:.5px;
+    background:linear-gradient(135deg,#FFFFFF 0%,#FFE0A3 55%,#FF9500 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  :root[data-theme="light"] .brand .wm{
+    background:linear-gradient(135deg,#1A1A1E 0%,#8A5A10 60%,#E07B00 100%);
+    -webkit-background-clip:text;background-clip:text;
+  }
+  .icon-btn{
+    width:38px;height:38px;flex:none;border-radius:11px;cursor:pointer;
+    background:var(--card);border:1px solid var(--stroke);color:var(--text);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .12s ease;
+  }
+  .icon-btn:active{transform:scale(.92);}
+  .bal-chip{
+    display:flex;align-items:center;gap:6px;flex:none;cursor:pointer;
+    background:var(--card);border:1px solid var(--stroke);
+    padding:9px 13px;border-radius:11px;font-weight:700;font-size:14px;
+  }
+  .bal-chip svg{color:var(--muted);}
+
+  /* --------- язык --------- */
+  .lang-wrap{position:relative;flex:none;}
+  .lang-btn{
+    display:flex;align-items:center;gap:6px;cursor:pointer;
+    background:var(--card);border:1px solid var(--stroke);
+    padding:9px 10px;border-radius:11px;color:var(--text);
+    transition:transform .12s ease;
+  }
+  .lang-btn:active{transform:scale(.94);}
+  .lang-btn .chev{font-size:9px;color:var(--muted);}
+  .flag{width:21px;height:14px;border-radius:2px;overflow:hidden;display:block;flex:none;
+        box-shadow:0 0 0 1px rgba(0,0,0,.12) inset;}
+  .flag svg{width:100%;height:100%;}
+  .lang-btn *, .lang-menu button *{pointer-events:none;}
+  .lang-menu{
+    position:absolute;top:calc(100% + 8px);right:0;z-index:200;
+    background:var(--card);border:1px solid var(--stroke);border-radius:14px;
+    padding:6px;min-width:184px;display:none;box-shadow:var(--shadow);
+  }
+  .lang-menu.open{display:block;animation:pop .16s ease;}
+  @keyframes pop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .lang-menu .hd{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;padding:8px 10px 6px;}
+  .lang-menu button{display:flex;align-items:center;gap:11px;width:100%;background:none;border:none;
+    color:var(--text);padding:11px 10px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
+    text-align:left;font-family:inherit;}
+  .lang-menu button.sel{background:var(--card-2);}
+  .lang-menu button .ck{margin-left:auto;color:var(--accent);opacity:0;font-weight:800;}
+  .lang-menu button.sel .ck{opacity:1;}
+  .lang-menu button .flag{width:24px;height:16px;}
+
+  /* ===================== ЭКРАНЫ ===================== */
+  .screen{display:none;}
+  .screen.active{display:block;animation:fade .24s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  h2.page{margin:0 0 18px;font-size:25px;font-weight:800;letter-spacing:-.6px;}
+  .sub-head{display:flex;align-items:center;gap:12px;margin:0 0 18px;}
+  .back{width:38px;height:38px;flex:none;border-radius:11px;border:1px solid var(--stroke);
+    background:var(--card);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .sub-head h2{margin:0;font-size:21px;font-weight:800;letter-spacing:-.4px;}
+
+  .card{background:var(--card);border:1px solid var(--stroke);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+  .muted{color:var(--muted);font-size:13px;}
+  .kicker{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;}
+  .section-title{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:22px 2px 10px;font-weight:700;}
+  .row{display:flex;align-items:center;gap:12px;}
+
+  .btn{width:100%;cursor:pointer;border-radius:13px;padding:15px;font-size:15px;font-weight:700;
+    font-family:inherit;background:var(--card-2);color:var(--text);border:1px solid var(--stroke);
+    transition:transform .12s ease;}
+  .btn:active{transform:scale(.98);}
+  .btn.primary{background:var(--grad);color:#1A0F00;border:none;box-shadow:var(--glow);font-weight:800;}
+  .btn.solid{background:var(--solid);color:var(--solid-text);border-color:var(--solid);}
+  .btn+.btn{margin-top:10px;}
+  .btn.half{width:auto;flex:1;}
+
+  /* ===================== МОНТАЖ ===================== */
+  .preview{
+    position:relative;border-radius:var(--radius);overflow:hidden;margin-bottom:16px;
+    aspect-ratio:9/16;max-height:320px;
+    background:linear-gradient(165deg,#23243A,#111219);
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;
+    border:1px solid var(--stroke);
+  }
+  .preview .ph{color:rgba(255,255,255,.4);}
+  .preview .note{color:rgba(255,255,255,.55);font-size:13px;}
+  .preview .cap{position:absolute;bottom:44px;left:0;right:0;text-align:center;padding:0 16px;}
+  .preview .cap .l1{color:#fff;font-size:15px;font-weight:600;text-shadow:0 2px 10px rgba(0,0,0,.7);}
+  .preview .cap .l2{color:#FBBF24;font-size:22px;font-weight:900;letter-spacing:.6px;text-shadow:0 2px 10px rgba(0,0,0,.7);}
+  .ex-btn{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.14);color:#fff;border:none;
+    border-radius:9px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
+    backdrop-filter:blur(6px);}
+
+  .scroller{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;}
+  .scroller::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:none;cursor:pointer;font-family:inherit;
+    background:var(--card);border:1px solid var(--stroke);color:var(--text);
+    padding:10px 17px;border-radius:11px;font-size:14px;font-weight:700;white-space:nowrap;
+    display:flex;align-items:center;gap:7px;transition:transform .12s ease;
+  }
+  .chip:active{transform:scale(.95);}
+  .chip.sel{background:var(--solid);color:var(--solid-text);border-color:var(--solid);}
+  .chip .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .scard, .pcard{
+    background:var(--card);border:1px solid var(--stroke);border-radius:14px;padding:13px 12px;
+    position:relative;min-height:118px;display:flex;flex-direction:column;gap:9px;
+    text-align:left;color:var(--text);
+    min-width:0;          /* иначе длинное слово распирает колонку сетки */
+  }
+  .scard .lbl, .pcard .lbl{flex:1;}
+  .scard{cursor:pointer;transition:transform .12s ease;}
+  .scard:active{transform:scale(.97);}
+  /* таджикские слова длиннее русских — разрешаем перенос внутри слова,
+     иначе «Наздикшавии» не влезает в узкую колонку и ломает вёрстку */
+  /* Значок «?» теперь в одном ряду с иконкой, а не с подписью —
+     поэтому отступ справа подписи не нужен, и слова перестают рваться. */
+  .scard .lbl, .pcard .lbl{font-size:12px;font-weight:700;line-height:1.3;
+    overflow-wrap:break-word;hyphens:auto;}
+  .scard .val{overflow-wrap:anywhere;}
+  .scard .val{font-size:13px;color:var(--accent);margin-top:10px;font-weight:700;}
+  /* цветные плашки под иконки — именно они оживляют интерфейс.
+     Цвет кодирует смысл: каждый раздел получает свой оттенок. */
+  /* Вся гамма — тёплая, из логотипа: от золота до жжёного оранжевого.
+     Холодных цветов (синий, зелёный) сознательно нет — они спорят с брендом. */
+  .itile{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .c1{background:rgba(255,193,59,.15); color:#FFC13B;}  /* золото     */
+  .c2{background:rgba(255,149,0,.15);  color:#FF9500;}  /* оранжевый  */
+  .c3{background:rgba(255,106,0,.15);  color:#FF7A1F;}  /* насыщенный */
+  .c4{background:rgba(255,138,61,.15); color:#FF8A3D;}  /* персик     */
+  .c5{background:rgba(255,94,58,.15);  color:#FF6E4A;}  /* коралл     */
+  .c6{background:rgba(255,214,102,.15);color:#FFD666;}  /* мёд        */
+  .c7{background:rgba(224,123,0,.15);  color:#E8900C;}  /* янтарь     */
+  /* на светлом фоне золото нечитаемо — берём тона темнее */
+  :root[data-theme="light"] .c1{color:#B07400;}
+  :root[data-theme="light"] .c2{color:#C2660A;}
+  :root[data-theme="light"] .c3{color:#C2410C;}
+  :root[data-theme="light"] .c4{color:#B85A1A;}
+  :root[data-theme="light"] .c5{color:#C0442B;}
+  :root[data-theme="light"] .c6{color:#A07A00;}
+  :root[data-theme="light"] .c7{color:#A86A00;}
+
+  .q{position:absolute;top:10px;right:9px;width:17px;height:17px;border-radius:50%;
+    border:1px solid var(--stroke);background:transparent;color:var(--muted);
+    font-size:10px;line-height:1;cursor:pointer;font-family:inherit;padding:0;
+    display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .badge-new{position:absolute;top:-7px;right:8px;font-size:9px;font-weight:800;letter-spacing:.06em;
+    background:var(--grad);color:#fff;padding:3px 7px;border-radius:5px;
+    box-shadow:0 3px 10px -3px rgba(255,138,0,.75);}
+
+  .sw{position:relative;width:42px;height:25px;flex:none;display:inline-block;}
+  .sw input{opacity:0;width:0;height:0;position:absolute;}
+  .sw i{position:absolute;inset:0;background:var(--sw-off);border-radius:999px;transition:.2s;cursor:pointer;display:block;}
+  .sw i::after{content:'';position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;
+    background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .sw input:checked + i{background:var(--sw-on);}
+  .sw input:checked + i::after{transform:translateX(17px);}
+
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin:22px 2px 10px;}
+  .sec-head h3{margin:0;font-size:16px;font-weight:800;letter-spacing:-.2px;}
+  .sec-head .link{font-size:13px;color:var(--muted);border-bottom:1px dashed var(--muted);cursor:pointer;}
+  .drop{border:1.5px dashed var(--stroke);border-radius:var(--radius);padding:20px 16px;background:var(--card);
+    display:flex;align-items:center;gap:14px;cursor:pointer;}
+  .drop .t{font-weight:800;font-size:15px;}
+  .drop .f{font-size:12px;color:var(--muted);margin-top:3px;}
+  .drop .plus{margin-left:auto;width:46px;height:46px;border-radius:12px;flex:none;
+    background:var(--solid);color:var(--solid-text);
+    display:flex;align-items:center;justify-content:center;}
+
+  .cutrow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--stroke);
+    border-radius:14px;padding:14px;margin-top:12px;}
+  .cutrow .ic{width:34px;height:34px;border-radius:9px;background:var(--card-2);flex:none;color:var(--accent);
+    display:flex;align-items:center;justify-content:center;}
+
+  .promo{background:var(--promo-bg);border-radius:var(--radius);padding:16px;margin-top:12px;}
+  .promo .p{display:flex;gap:11px;font-size:13.5px;line-height:1.5;align-items:flex-start;}
+  .promo .p+.p{margin-top:13px;}
+  .promo .p .ic{color:var(--muted);margin-top:1px;}
+
+  /* ===================== БАЛАНС ===================== */
+  .bal-big{font-size:40px;font-weight:800;letter-spacing:-1.4px;line-height:1.1;margin-top:4px;}
+  .bal-big .u{font-size:16px;color:var(--muted);font-weight:600;letter-spacing:0;}
+  .pack{position:relative;display:flex;align-items:center;gap:12px;justify-content:space-between;
+    border:1px solid var(--stroke);background:var(--card);border-radius:var(--radius);
+    padding:17px 16px;margin-bottom:12px;cursor:pointer;transition:transform .12s ease;}
+  .pack:active{transform:scale(.985);}
+  .pack.hot{border-color:var(--accent);}
+  .pack .rolls{font-size:14px;font-weight:700;}
+  .pack .rolls b{font-size:25px;letter-spacing:-.7px;margin-right:3px;}
+  .pack .pname{font-weight:700;font-size:14px;margin-top:2px;}
+  .pack .ptok{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .pack .right{text-align:right;flex:none;}
+  .pack .price{font-weight:800;font-size:19px;white-space:nowrap;letter-spacing:-.5px;}
+  .pack .per{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;}
+  .pack .badge{position:absolute;top:-8px;left:16px;font-size:9.5px;font-weight:800;letter-spacing:.07em;
+    background:var(--grad);color:#fff;padding:3px 9px;border-radius:5px;
+    box-shadow:0 3px 10px -3px rgba(255,138,0,.75);}
+  .pack .pic{margin-right:10px;}
+
+  /* ===================== ПРИГЛАСИТЬ ===================== */
+  .ref-code{background:var(--card-2);border:1px solid var(--stroke);border-radius:11px;
+    padding:13px 14px;font-size:13.5px;word-break:break-all;margin-top:8px;font-family:ui-monospace,Menlo,Consolas,monospace;}
+  .stat{display:flex;gap:12px;margin-bottom:12px;}
+  .stat .box{flex:1;background:var(--card);border:1px solid var(--stroke);border-radius:14px;padding:15px;}
+  .stat .n{font-size:27px;font-weight:800;letter-spacing:-.7px;}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:2px;}
+  .hint-box{background:var(--hint-bg);border-left:3px solid var(--hint-line);border-radius:12px;padding:16px;margin-bottom:12px;}
+  .hint-box h4{margin:0 0 8px;font-size:15px;font-weight:800;}
+  .hint-box p{margin:0;font-size:13.5px;line-height:1.5;color:var(--text);opacity:.82;}
+  .hint-box .more{display:inline-block;margin-top:10px;font-weight:700;font-size:13.5px;
+    color:var(--accent);text-decoration:underline;cursor:pointer;}
+
+  /* ===================== РОЛИКИ ===================== */
+  .vid{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--stroke);
+    background:var(--card);border-radius:14px;margin-bottom:10px;}
+  .vid .thumb{width:46px;height:58px;border-radius:9px;flex:none;color:rgba(255,255,255,.55);
+    background:linear-gradient(165deg,#23243A,#111219);display:flex;align-items:center;justify-content:center;}
+  .vid .nm{font-weight:700;font-size:14px;}
+  .vid .st{font-size:11px;padding:4px 9px;border-radius:6px;margin-left:auto;font-weight:700;white-space:nowrap;}
+  .st.ok{background:rgba(22,163,74,.13);color:#15803D;}
+  .st.wait{background:rgba(79,70,229,.13);color:#4F46E5;}
+  :root[data-theme="dark"] .st.ok{color:#4ADE80;}
+  :root[data-theme="dark"] .st.wait{color:#A5B4FC;}
+  .empty{text-align:center;color:var(--muted);padding:44px 10px;}
+  .empty .ic{display:flex;justify-content:center;margin-bottom:12px;opacity:.5;}
+
+  /* ===================== ПРОФИЛЬ ===================== */
+  .menu{background:var(--card);border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;}
+  .menu button{display:flex;align-items:center;gap:13px;width:100%;background:none;border:none;
+    color:var(--text);padding:15px 16px;cursor:pointer;font-size:15px;font-weight:600;
+    text-align:left;font-family:inherit;}
+  .menu button+button{border-top:1px solid var(--stroke);}
+  .menu button:active{background:var(--card-2);}
+  .menu button .mi{color:var(--muted);}
+  .menu button .arr{margin-left:auto;color:var(--muted);font-size:16px;}
+  .seg{display:flex;gap:4px;background:var(--card-2);border-radius:11px;padding:4px;}
+  .seg button{flex:1;background:none;border:none;color:var(--muted);font-family:inherit;
+    padding:9px 6px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;}
+  .seg button.sel{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1);}
+
+  /* ===================== НИЖНЕЕ МЕНЮ ===================== */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:var(--nav-bg);backdrop-filter:blur(16px);
+    border-top:1px solid var(--stroke);
+    display:flex;max-width:520px;margin:0 auto;
+    padding:9px 4px calc(9px + env(safe-area-inset-bottom));
+  }
+  .nav button{
+    flex:1;background:none;border:none;color:var(--muted);cursor:pointer;font-family:inherit;
+    display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10px;font-weight:600;
+    padding:4px 2px;position:relative;
+  }
+  .nav button.active{color:var(--text);}
+  .nav .cbtn{overflow:visible;}
+  .nav .cbtn .fab{
+    position:absolute;top:-28px;left:50%;transform:translateX(-50%);
+    width:54px;height:54px;border-radius:16px;background:var(--grad);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--glow);
+    border:4px solid var(--bg);transition:transform .14s ease;
+  }
+  .nav .cbtn:active .fab{transform:translateX(-50%) scale(.93);}
+  .nav .cbtn .lbl{margin-top:31px;}
+  .nav .nbadge{
+    position:absolute;top:-3px;right:calc(50% - 24px);
+    background:var(--accent);color:#fff;font-size:9px;font-weight:800;
+    min-width:16px;height:16px;padding:0 4px;border-radius:5px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%) translateY(16px);
+    background:var(--solid);color:var(--solid-text);
+    padding:13px 18px;border-radius:12px;font-size:13.5px;font-weight:600;line-height:1.45;
+    opacity:0;pointer-events:none;transition:.22s;z-index:100;max-width:88%;text-align:center;
+    box-shadow:var(--shadow);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ ШАПКА ============ -->
+  <div class="top">
+    <div class="brand"><span class="mark" id="brandMark"></span><span class="wm">TEZ</span></div>
+
+    <div class="lang-wrap">
+      <button class="lang-btn" id="langBtn" aria-label="Language">
+        <span class="flag" id="curFlag"></span><span class="chev">▼</span>
+      </button>
+      <div class="lang-menu" id="langMenu">
+        <div class="hd" data-i18n="langLabel">Язык</div>
+        <button data-lang="ru"><span class="flag"></span><span>Русский</span><span class="ck">✓</span></button>
+        <button data-lang="tg"><span class="flag"></span><span>Тоҷикӣ</span><span class="ck">✓</span></button>
+        <button data-lang="en"><span class="flag"></span><span>English</span><span class="ck">✓</span></button>
+      </div>
+    </div>
+
+    <button class="icon-btn" id="themeBtn" aria-label="Theme"></button>
+    <div class="bal-chip" onclick="go('balance')"><span id="chipIc"></span><span id="balChip">0</span></div>
+  </div>
+
+  <!-- ============ МОНТАЖ ============ -->
+  <section class="screen active" id="editor">
+    <div class="preview">
+      <button class="ex-btn" onclick="toast(t('soon'))" data-i18n="example">Пример</button>
+      <span class="ph" id="prevIc"></span>
+      <div class="note" data-i18n="prevNote">Здесь появится ваше видео</div>
+      <div class="cap">
+        <div class="l1" data-i18n="capTop">так выглядят</div>
+        <div class="l2" data-i18n="capBottom">СУБТИТРЫ</div>
+      </div>
+    </div>
+
+    <div class="section-title" data-i18n="styleTitle">Стиль</div>
+    <div class="scroller" id="styleRow"></div>
+
+    <div class="section-title" data-i18n="colorTitle">Цвет</div>
+    <div class="scroller" id="colorRow"></div>
+
+    <div class="section-title" data-i18n="subsTitle">Субтитры</div>
+    <div class="g3" id="subsRow"></div>
+
+    <div class="section-title" data-i18n="params">Параметры</div>
+    <div class="g3" id="paramRow"></div>
+
+    <div class="sec-head">
+      <h3 data-i18n="videoSec">Видео</h3>
+      <span class="link" onclick="toast(t('reqText'))" data-i18n="videoReq">Требования к видео</span>
+    </div>
+    <div class="drop" onclick="fakeUpload()">
+      <div>
+        <div class="t" data-i18n="upTitle">Загрузите видео</div>
+        <div class="f">.mp4, .mov, .m4v, .webm, .mkv, .avi</div>
+      </div>
+      <div class="plus" id="plusIc"></div>
+    </div>
+
+    <div class="cutrow">
+      <div class="itile c5" id="cutIc"></div>
+      <div style="font-weight:700;font-size:14.5px;" data-i18n="smartCut">Умная нарезка</div>
+      <button class="q" style="position:static;margin-left:auto;" onclick="toast(t('hCut'))">?</button>
+      <label class="sw"><input type="checkbox" checked><i></i></label>
+    </div>
+
+    <div class="section-title" data-i18n="promoTitle">Условия</div>
+    <div class="promo">
+      <div class="p"><span class="itile c3" id="giftIc"></span><span data-i18n="promo1">Первое видео — бесплатно. Посмотрите результат, прежде чем оплачивать.</span></div>
+      <div class="p"><span class="itile c1" id="infoIc"></span><span data-i18n="promo2">На бесплатном видео остаётся водяной знак. После оплаты любого пакета мы пришлём его без знака — токены за это не списываются.</span></div>
+    </div>
+
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;">
+      <div><div class="muted" data-i18n="cost">Стоимость</div><div style="font-weight:800;font-size:16px;" data-i18n="costVal">1 монтаж — 24 токена</div></div>
+      <div style="text-align:right;"><div class="muted" data-i18n="yourBal">Ваш баланс</div><div style="font-weight:800;font-size:16px;" id="balEditor">0</div></div>
+    </div>
+    <button class="btn primary" onclick="startRender()" data-i18n="renderBtn">Смонтировать — 24 токена</button>
+  </section>
+
+  <!-- ============ БАЛАНС ============ -->
+  <section class="screen" id="balance">
+    <h2 class="page" data-i18n="balTitle">Баланс</h2>
+
+    <div class="card" style="padding:20px;">
+      <div class="kicker" data-i18n="balLabel">Баланс</div>
+      <div class="bal-big"><span id="balBig">0</span> <span class="u" data-i18n="tokens">токенов</span></div>
+      <div class="muted" style="margin-top:3px;" id="balEnough">Хватит на 0 монтажей</div>
+      <button class="btn solid" style="margin-top:16px;" onclick="toast(t('soon'))" data-i18n="history">История операций</button>
+    </div>
+
+    <div class="section-title" data-i18n="choosePack">Выберите пакет</div>
+    <div id="packList"></div>
+    <p class="muted" style="text-align:center;margin:2px 0 0;font-size:13px;" data-i18n="chooseHint">Выберите один из вариантов</p>
+    <p class="muted" style="text-align:center;margin-top:12px;font-size:12px;" data-i18n="payNote">Оплата картой или Telegram Stars</p>
+  </section>
+
+  <!-- ============ ПРИГЛАСИТЬ ============ -->
+  <section class="screen" id="ref">
+    <h2 class="page" data-i18n="refTitle">Приглашайте друзей</h2>
+    <p class="muted" style="margin:-10px 0 16px;font-size:13.5px;line-height:1.5;" data-i18n="refP">
+      За каждую оплату приглашённого вам возвращается 10% от купленных им токенов — прямо на баланс.</p>
+
+    <div class="card">
+      <div class="kicker" data-i18n="yourLink">Ваша ссылка</div>
+      <div class="ref-code" id="refLink">https://t.me/YourBot?start=AB12C</div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn primary half" onclick="shareRef()" data-i18n="shareBtn">Поделиться</button>
+        <button class="btn half" onclick="copyRef()" data-i18n="copyBtn">Скопировать</button>
+      </div>
+    </div>
+
+    <div class="stat">
+      <div class="box"><div class="n" id="refCount">0</div><div class="l" data-i18n="invited">приглашено</div></div>
+      <div class="box"><div class="n" id="refEarn">0</div><div class="l" data-i18n="earned">токенов заработано</div></div>
+    </div>
+
+    <div class="card">
+      <div class="kicker" data-i18n="days7">За 7 дней</div>
+      <p class="muted" style="margin:8px 0 0;" data-i18n="noData">За этот период нет ни регистраций, ни оплат — здесь появится график.</p>
+    </div>
+
+    <div class="hint-box">
+      <h4 data-i18n="partnerH">Рефералка — токены, партнёрство — деньги</h4>
+      <p data-i18n="partnerP">Самозанятым и ИП — 15% с каждой оплаты приглашённых, рублями на ваши реквизиты. Люди, которых вы уже пригласили, тоже начнут приносить доход после оформления договора.</p>
+      <span class="more" onclick="toast(t('soon'))" data-i18n="partnerMore">Подробнее об условиях</span>
+    </div>
+
+    <button class="btn primary" onclick="toast(t('soon'))" data-i18n="becomePartner">Стать партнёром</button>
+  </section>
+
+  <!-- ============ РОЛИКИ ============ -->
+  <section class="screen" id="videos">
+    <h2 class="page" data-i18n="vidTitle">Мои видео</h2>
+    <div id="vidList"></div>
+    <div class="empty" id="vidEmpty">
+      <div class="ic" id="emptyIc"></div>
+      <p data-i18n="vidEmpty">Здесь появятся ваши смонтированные видео</p>
+      <button class="btn primary" style="max-width:230px;margin:0 auto;" onclick="go('editor')" data-i18n="vidStartBtn">Перейти к монтажу</button>
+    </div>
+  </section>
+
+  <!-- ============ ПРОФИЛЬ ============ -->
+  <section class="screen" id="profile">
+    <h2 class="page" data-i18n="profTitle">Профиль</h2>
+
+    <div class="card">
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.4px;" id="profName">Гость</div>
+      <div class="muted" id="profUser">—</div>
+    </div>
+
+    <div class="card row">
+      <div style="width:40px;height:40px;border-radius:11px;background:var(--card-2);display:flex;align-items:center;justify-content:center;flex:none;color:var(--muted);" class="itile c4" id="renderIc"></div>
+      <div><div style="font-size:20px;font-weight:800;letter-spacing:-.4px;" id="profRenders">0</div>
+      <div class="muted" data-i18n="edited">Смонтировано видео</div></div>
+    </div>
+
+    <div class="menu" id="profMenu"></div>
+
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:12px;" data-i18n="langLabel">Язык</div>
+      <div class="seg" id="langSeg">
+        <button data-lang="ru">Русский</button>
+        <button data-lang="tg">Тоҷикӣ</button>
+        <button data-lang="en">English</button>
+      </div>
+      <div class="row" style="justify-content:space-between;margin-top:16px;">
+        <span style="font-weight:700;" data-i18n="themeLabel">Тёмная тема</span>
+        <label class="sw"><input type="checkbox" id="themeSw"><i></i></label>
+      </div>
+    </div>
+
+    <div class="section-title" data-i18n="docs">Документы</div>
+    <div class="menu">
+      <button onclick="toast(t('soon'))"><span data-i18n="offer">Публичная оферта</span><span class="arr">›</span></button>
+      <button onclick="toast(t('soon'))"><span data-i18n="privacy">Политика конфиденциальности</span><span class="arr">›</span></button>
+    </div>
+  </section>
+
+  <!-- ============ ПОДДЕРЖКА ============ -->
+  <section class="screen" id="support">
+    <div class="sub-head">
+      <button class="back" onclick="go('profile')" id="backIc">‹</button>
+      <h2 data-i18n="supTitle">Поддержка</h2>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div style="width:42px;height:42px;border-radius:11px;background:var(--card-2);display:flex;align-items:center;justify-content:center;flex:none;color:var(--accent);" class="itile c2" id="supIc"></div>
+        <div><div style="font-weight:700;" data-i18n="supWrite">Написать в поддержку</div>
+        <div class="muted" data-i18n="supSub">Обычно отвечаем за 5–10 минут</div></div>
+      </div>
+      <button class="btn primary" style="margin-top:14px;" onclick="openSupport()" data-i18n="supBtn">Открыть чат поддержки</button>
+    </div>
+    <div class="section-title" data-i18n="faq">Частые вопросы</div>
+    <div class="card"><div style="font-weight:700;" data-i18n="q1">Как пополнить баланс?</div><div class="muted" style="margin-top:6px;" data-i18n="a1">Раздел «Баланс» → выберите пакет → оплата картой или Stars.</div></div>
+    <div class="card"><div style="font-weight:700;" data-i18n="q2">Сколько занимает монтаж?</div><div class="muted" style="margin-top:6px;" data-i18n="a2">В среднем 30–90 секунд в зависимости от длины видео.</div></div>
+    <div class="card"><div style="font-weight:700;" data-i18n="q3">Списались токены, а видео нет</div><div class="muted" style="margin-top:6px;" data-i18n="a3">Напишите в поддержку — вернём токены или выполним монтаж заново.</div></div>
+  </section>
+
+</div>
+
+<!-- ============ НИЖНЕЕ МЕНЮ ============ -->
+<nav class="nav">
+  <button id="nav-ref" onclick="go('ref')"><span class="ni"></span><span data-i18n="navInvite">Пригласить</span></button>
+  <button id="nav-videos" onclick="go('videos')"><span class="ni"></span><span data-i18n="navVideos">Видео</span></button>
+  <button id="nav-editor" class="cbtn active" onclick="go('editor')">
+    <span class="fab"></span><span class="lbl" data-i18n="navEdit">Монтаж</span>
+  </button>
+  <button id="nav-balance" onclick="go('balance')"><span class="ni"></span><span class="nbadge" id="navBadge">0</span><span data-i18n="navBalance">Баланс</span></button>
+  <button id="nav-profile" onclick="go('profile')"><span class="ni"></span><span data-i18n="navProfile">Профиль</span></button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =================================================================
+   1. ИКОНКИ — контурные SVG вместо эмодзи.
+      Эмодзи выглядят по-разному на каждом устройстве и смотрятся
+      несерьёзно; контурные иконки задают профессиональный тон.
+   ================================================================= */
+const ICONS = {
+  invite:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
+  film:  '<rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 3v18M17 3v18M2 9h5M2 15h5M17 9h5M17 15h5"/>',
+  coins: '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+  user:  '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  chat:  '<path d="M21 11.5a8.4 8.4 0 0 1-12.9 7.2L3 21l2.3-5.1A8.4 8.4 0 1 1 21 11.5z"/>',
+  megaphone:'<path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M16 9a3.5 3.5 0 0 1 0 6"/><path d="M19 6a7 7 0 0 1 0 12"/>',
+  scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/>',
+  gift:  '<rect x="2" y="7" width="20" height="5" rx="1"/><path d="M4 12v9h16v-9M12 7v14"/><path d="M12 7S10.8 3 8.5 3a2.5 2.5 0 0 0 0 4.5zM12 7s1.2-4 3.5-4a2.5 2.5 0 0 1 0 4.5z"/>',
+  info:  '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  plus:  '<path d="M12 5v14M5 12h14"/>',
+  smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
+  volume:'<path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+  layers:'<path d="M12 2L2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>',
+  move:  '<path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>',
+  zoom:  '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/>',
+  zap:   '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  type:  '<path d="M4 7V5h16v2M9 19h6M12 5v14"/>',
+  align: '<path d="M3 6h18M3 12h12M3 18h18"/>',
+  wand:  '<path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M12.2 6.2l-1.4-1.4"/><path d="M14.5 9.5L3 21"/>',
+  moon:  '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  sun:   '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  play:  '<circle cx="12" cy="12" r="10"/><path d="M10 8.5l6 3.5-6 3.5z"/>',
+  back:  '<path d="M15 18l-6-6 6-6"/>',
+};
+const FILLED = {
+  sparkle:'<path d="M12 2.5l2.1 6.1 6.4 2.1-6.4 2.1L12 19l-2.1-6.2L3.5 10.7l6.4-2.1z"/>',
+};
+
+function icon(name, size){
+  const s = size || 20;
+  if(FILLED[name]){
+    return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor">${FILLED[name]}</svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor"
+    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`;
+}
+
+/* =================================================================
+   2. ФЛАГИ
+   ================================================================= */
+let _flagId = 0;
+function flagSVG(code){
+  if(code === 'ru'){
+    return `<svg viewBox="0 0 9 6" preserveAspectRatio="none">
+      <rect width="9" height="6" fill="#ffffff"/>
+      <rect y="2" width="9" height="2" fill="#0039A6"/>
+      <rect y="4" width="9" height="2" fill="#D52B1E"/></svg>`;
+  }
+  if(code === 'tg'){
+    return `<svg viewBox="0 0 14 7" preserveAspectRatio="none">
+      <rect width="14" height="7" fill="#ffffff"/>
+      <rect width="14" height="2" fill="#CC0000"/>
+      <rect y="5" width="14" height="2" fill="#006600"/>
+      <g fill="#F8C300">
+        <path d="M5.75 4.25 L5.75 3.15 L6.2 3.65 L6.65 2.8 L7.1 3.65 L7.55 3.15 L7.55 4.25 Z"/>
+        <circle cx="5.75" cy="2.62" r=".15"/><circle cx="6.2" cy="2.45" r=".15"/>
+        <circle cx="6.65" cy="2.38" r=".15"/><circle cx="7.1" cy="2.45" r=".15"/>
+        <circle cx="7.55" cy="2.62" r=".15"/>
+      </g></svg>`;
+  }
+  const id = 'ukc' + (++_flagId);
+  return `<svg viewBox="0 0 60 30" preserveAspectRatio="none">
+    <clipPath id="${id}"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath>
+    <rect width="60" height="30" fill="#012169"/>
+    <path d="M0,0 L60,30 M60,0 L0,30" stroke="#ffffff" stroke-width="6"/>
+    <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#${id})" stroke="#C8102E" stroke-width="4"/>
+    <path d="M30,0 V30 M0,15 H60" stroke="#ffffff" stroke-width="10"/>
+    <path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></svg>`;
+}
+
+/* =================================================================
+   3. ЭКОНОМИКА
+   ================================================================= */
+const PRICE = 24;
+const PACKAGES = [
+  { id:'p10', rolls:10, tokens:240,  rub:1490, per:149, name:'pack1' },
+  { id:'p25', rolls:25, tokens:590,  rub:3490, per:139, name:'pack2', badge:'popular' },
+  { id:'p50', rolls:50, tokens:1170, rub:6490, per:129, name:'pack3' },
+];
+function money(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+
+const STYLES = ['Billboard','Feather','Nouveau','Modernist','Chisel'];
+const COLORS = [
+  {key:'cAmber',  dot:'#F59E0B'},
+  {key:'cAzure',  dot:'#3B82F6'},
+  {key:'cLime',   dot:'#84CC16'},
+  {key:'cCrimson',dot:'#DC2626'},
+  {key:'cPearl',  dot:'#D1D5DB'},
+];
+/* У каждого элемента свой значок и цвет — так экран читается
+   с одного взгляда, а не как сплошная стена текста. */
+const SUBS = [
+  {key:'sDesign',   hint:'hDesign',   ic:'wand',  c:'c4', opts:['oDynamic','oCalm','oBold']},
+  {key:'sSize',     hint:'hSize',     ic:'type',  c:'c2', opts:['oMedium','oLarge','oSmall']},
+  {key:'sPosition', hint:'hPosition', ic:'align', c:'c3', opts:['oAuto','oTop','oBottom']},
+];
+const PARAMS = [
+  {key:'pEmoji',  hint:'hEmoji',  ic:'smile',  c:'c1', on:false},
+  {key:'pSound',  hint:'hSound',  ic:'volume', c:'c2', on:true},
+  {key:'pMedia',  hint:'hMedia',  ic:'image',  c:'c3', on:true},
+  {key:'pCards',  hint:'hCards',  ic:'layers', c:'c4', on:true},
+  {key:'pMotion', hint:'hMotion', ic:'move',   c:'c5', on:true},
+  {key:'pZoom',   hint:'hZoom',   ic:'zoom',   c:'c6', on:true, isNew:true},
+  {key:'pHook',   hint:'hHook',   ic:'zap',    c:'c7', on:false},
+];
+const MENU = [
+  {key:'mTopUp',   ic:'coins',     c:'c1', act:"go('balance')"},
+  {key:'mSupport', ic:'chat',      c:'c2', act:"go('support')"},
+  {key:'mPartner', ic:'invite',    c:'c3', act:"go('ref')"},
+  {key:'mChannel', ic:'megaphone', c:'c4', act:"openChannel()"},
+];
+/* значки пакетов — те же, что в боте */
+const PACK_ICONS = { p10:'🚀', p25:'🔥', p50:'👑' };
+
+/* =================================================================
+   4. ПЕРЕВОДЫ — тон деловой, обращение на «вы»
+   ================================================================= */
+const I18N = {
+  ru:{
+    navInvite:'Пригласить', navVideos:'Видео', navEdit:'Монтаж', navBalance:'Баланс', navProfile:'Профиль',
+    example:'Пример', prevNote:'Здесь появится ваше видео', capTop:'так выглядят', capBottom:'СУБТИТРЫ',
+    styleTitle:'Стиль', colorTitle:'Цвет', subsTitle:'Субтитры', params:'Параметры',
+    cAmber:'Янтарь', cAzure:'Лазурь', cLime:'Лайм', cCrimson:'Багровый', cPearl:'Жемчуг',
+    sDesign:'Оформление', sSize:'Размер текста', sPosition:'Расположение',
+    oDynamic:'Динамичное', oCalm:'Спокойное', oBold:'Жирное',
+    oMedium:'Средний', oLarge:'Крупный', oSmall:'Мелкий',
+    oAuto:'Авто', oTop:'Сверху', oBottom:'Снизу',
+    pEmoji:'Эмодзи в субтитрах', pSound:'Звуковые эффекты', pMedia:'Медиа-карточки',
+    pCards:'Плашки и подписи', pMotion:'Движение камеры', pZoom:'Наезд камеры в начале',
+    pHook:'Подобрать хук к видео',
+    hDesign:'Как ведут себя субтитры: спокойно или с анимацией.',
+    hSize:'Размер текста субтитров на видео.',
+    hPosition:'Где разместить субтитры. «Авто» выбирает лучшее место.',
+    hEmoji:'Добавляет эмодзи к словам в субтитрах.',
+    hSound:'Подставляет звуки на переходах и акцентах.',
+    hMedia:'Вставляет изображения по смыслу сказанного.',
+    hCards:'Подписи и плашки поверх видео.',
+    hMotion:'Лёгкое движение кадра, чтобы картинка не была статичной.',
+    hZoom:'Плавный наезд в первые секунды — удерживает внимание.',
+    hHook:'Система предложит цепляющую фразу для начала видео.',
+    hCut:'Убирает паузы и слабые места, оставляя только суть.',
+    videoSec:'Видео', videoReq:'Требования к видео', upTitle:'Загрузите видео',
+    reqText:'До 3 минут, вертикальное или горизонтальное, не более 500 МБ.',
+    smartCut:'Умная нарезка',
+    promoTitle:'Условия',
+    promo1:'Первое видео — бесплатно. Посмотрите результат, прежде чем оплачивать.',
+    promo2:'На бесплатном видео остаётся водяной знак. После оплаты любого пакета мы пришлём его без знака — токены за это не списываются.',
+    cost:'Стоимость', costVal:'1 монтаж — {n} токена', yourBal:'Ваш баланс', renderBtn:'Смонтировать — {n} токена',
+    balTitle:'Баланс', balLabel:'Баланс', tokens:'токенов', enough:'Хватит на', history:'История операций',
+    choosePack:'Выберите пакет', chooseHint:'Выберите один из вариантов',
+    pack1:'Старт', pack2:'Для активных', pack3:'Контент-завод', popular:'ПОПУЛЯРНЫЙ', perRoll:'за видео',
+    payNote:'Оплата картой или Telegram Stars',
+    refTitle:'Приглашайте друзей',
+    refP:'За каждую оплату приглашённого вам возвращается 10% от купленных им токенов — прямо на баланс.',
+    yourLink:'Ваша ссылка', shareBtn:'Поделиться', copyBtn:'Скопировать',
+    invited:'приглашено', earned:'токенов заработано',
+    days7:'За 7 дней', noData:'За этот период нет ни регистраций, ни оплат — здесь появится график.',
+    partnerH:'Рефералка — токены, партнёрство — деньги',
+    partnerP:'Самозанятым и ИП — 15% с каждой оплаты приглашённых, рублями на ваши реквизиты. Люди, которых вы уже пригласили, тоже начнут приносить доход после оформления договора.',
+    partnerMore:'Подробнее об условиях', becomePartner:'Стать партнёром',
+    vidTitle:'Мои видео', vidEmpty:'Здесь появятся ваши смонтированные видео', vidStartBtn:'Перейти к монтажу',
+    stReady:'Готово', stWork:'В работе', dReady:'Готово к скачиванию', dWork:'Монтируется',
+    profTitle:'Профиль', edited:'Смонтировано видео',
+    mTopUp:'Пополнить баланс', mSupport:'Поддержка', mPartner:'Партнёрская программа', mChannel:'Официальный канал',
+    themeLabel:'Тёмная тема', docs:'Документы', offer:'Публичная оферта', privacy:'Политика конфиденциальности',
+    supTitle:'Поддержка', supWrite:'Написать в поддержку', supSub:'Обычно отвечаем за 5–10 минут',
+    supBtn:'Открыть чат поддержки', faq:'Частые вопросы',
+    q1:'Как пополнить баланс?', a1:'Раздел «Баланс» → выберите пакет → оплата картой или Stars.',
+    q2:'Сколько занимает монтаж?', a2:'В среднем 30–90 секунд в зависимости от длины видео.',
+    q3:'Списались токены, а видео нет', a3:'Напишите в поддержку — вернём токены или выполним монтаж заново.',
+    langLabel:'Язык', soon:'Скоро будет доступно',
+    tCopied:'Ссылка скопирована', tNoGems:'Недостаточно токенов — пополните баланс',
+    tFile:'Здесь откроется выбор файла — требуется сервер', tRun:'Монтаж запущен. Демо-режим: сервер пока не подключён',
+    tPay:'Открываем оплату', tLang:'Язык изменён'
+  },
+
+  tg:{
+    navInvite:'Даъват', navVideos:'Видео', navEdit:'Монтаж', navBalance:'Баланс', navProfile:'Профил',
+    example:'Намуна', prevNote:'Дар ин ҷо видеои шумо пайдо мешавад', capTop:'зерунвон чунин аст', capBottom:'ЗЕРУНВОН',
+    styleTitle:'Услуб', colorTitle:'Ранг', subsTitle:'Зерунвон', params:'Танзимот',
+    cAmber:'Каҳрабо', cAzure:'Нилобӣ', cLime:'Лиму', cCrimson:'Арғувон', cPearl:'Марворид',
+    sDesign:'Тарҳ', sSize:'Андозаи матн', sPosition:'Ҷойгиршавӣ',
+    oDynamic:'Ҷунбанда', oCalm:'Ором', oBold:'Ғафс',
+    oMedium:'Миёна', oLarge:'Калон', oSmall:'Хурд',
+    oAuto:'Худкор', oTop:'Боло', oBottom:'Поён',
+    pEmoji:'Эмодзи дар зерунвон', pSound:'Эффектҳои садо', pMedia:'Кортҳои медиа',
+    pCards:'Лавҳаҳо ва навиштаҷот', pMotion:'Ҳаракати камера', pZoom:'Наздикшавии камера дар аввал',
+    pHook:'Интихоби ҳук барои видео',
+    hDesign:'Зерунвонҳо чӣ гуна рафтор мекунанд: ором ё бо аниматсия.',
+    hSize:'Андозаи матни зерунвон дар видео.',
+    hPosition:'Зерунвонҳо дар куҷо ҷойгир шаванд. «Худкор» беҳтаринро интихоб мекунад.',
+    hEmoji:'Ба калимаҳои зерунвон эмодзи илова мекунад.',
+    hSound:'Дар гузаришҳо ва таъкидҳо садо мегузорад.',
+    hMedia:'Мувофиқи гуфтор тасвирҳо мегузорад.',
+    hCards:'Навиштаҷот ва лавҳаҳо дар болои видео.',
+    hMotion:'Ҳаракати сабуки кадр, то тасвир статикӣ набошад.',
+    hZoom:'Наздикшавии нарм дар сонияҳои аввал — диққатро нигоҳ медорад.',
+    hHook:'Система барои оғози видео ибораи ҷолиб пешниҳод мекунад.',
+    hCut:'Таваққуфҳо ва ҷойҳои сустро мебарорад, танҳо муҳимаш мемонад.',
+    videoSec:'Видео', videoReq:'Талабот ба видео', upTitle:'Видеоро бор кунед',
+    reqText:'То 3 дақиқа, амудӣ ё уфуқӣ, на бештар аз 500 МБ.',
+    smartCut:'Буриши оқилона',
+    promoTitle:'Шартҳо',
+    promo1:'Видеои аввал — ройгон. Пеш аз пардохт натиҷаро бубинед.',
+    promo2:'Дар видеои ройгон тамғаи обӣ мемонад. Пас аз хариди ҳар баста онро бе тамға мефиристем — барои ин токен гирифта намешавад.',
+    cost:'Нарх', costVal:'1 монтаж — {n} токен', yourBal:'Баланси шумо', renderBtn:'Монтаж кардан — {n} токен',
+    balTitle:'Баланс', balLabel:'Баланс', tokens:'токен', enough:'Барои', history:'Таърихи амалиётҳо',
+    choosePack:'Бастаро интихоб кунед', chooseHint:'Яке аз вариантҳоро интихоб кунед',
+    pack1:'Оғоз', pack2:'Барои фаъолон', pack3:'Корхонаи контент', popular:'МАШҲУР', perRoll:'барои як видео',
+    payNote:'Пардохт бо корт ё Telegram Stars',
+    refTitle:'Дӯстонро даъват кунед',
+    refP:'Аз ҳар пардохти даъватшуда 10% токенҳои харидаи ӯ ба баланси шумо бармегардад.',
+    yourLink:'Пайванди шумо', shareBtn:'Фиристодан', copyBtn:'Нусхабардорӣ',
+    invited:'даъват шуд', earned:'токен даромад',
+    days7:'Дар 7 рӯз', noData:'Дар ин давра на сабти ном ҳаст, на пардохт — дар ин ҷо график пайдо мешавад.',
+    partnerH:'Реферал — токен, шарикӣ — пул',
+    partnerP:'Ба худишғолон ва соҳибкорон — 15% аз ҳар пардохти даъватшудагон, бо рубл ба ҳисоби шумо. Онҳое, ки аллакай даъват кардаед, пас аз бастани шартнома низ даромад меоранд.',
+    partnerMore:'Муфассал дар бораи шартҳо', becomePartner:'Шарик шудан',
+    vidTitle:'Видеоҳои ман', vidEmpty:'Дар ин ҷо видеоҳои монтажшудаи шумо пайдо мешаванд', vidStartBtn:'Ба монтаж гузаштан',
+    stReady:'Тайёр', stWork:'Дар кор', dReady:'Барои боргирӣ тайёр', dWork:'Дар ҳоли монтаж',
+    profTitle:'Профил', edited:'Видеоҳои монтажшуда',
+    mTopUp:'Пур кардани баланс', mSupport:'Дастгирӣ', mPartner:'Барномаи шарикӣ', mChannel:'Канали расмӣ',
+    themeLabel:'Мавзӯи торик', docs:'Ҳуҷҷатҳо', offer:'Оферти оммавӣ', privacy:'Сиёсати махфият',
+    supTitle:'Дастгирӣ', supWrite:'Ба дастгирӣ нависед', supSub:'Одатан дар 5–10 дақиқа ҷавоб медиҳем',
+    supBtn:'Кушодани чати дастгирӣ', faq:'Саволҳои маъмул',
+    q1:'Чӣ тавр балансро пур кунам?', a1:'Бахши «Баланс» → бастаро интихоб кунед → пардохт бо корт ё Stars.',
+    q2:'Монтаж чанд вақт мегирад?', a2:'Ба ҳисоби миёна 30–90 сония, вобаста ба дарозии видео.',
+    q3:'Токенҳо кам шуданд, вале видео нест', a3:'Ба дастгирӣ нависед — токенҳоро бармегардонем ё монтажро аз нав мекунем.',
+    langLabel:'Забон', soon:'Ба зудӣ дастрас мешавад',
+    tCopied:'Пайванд нусхабардорӣ шуд', tNoGems:'Токен нокифоя — балансро пур кунед',
+    tFile:'Дар ин ҷо интихоби файл кушода мешавад — сервер лозим аст', tRun:'Монтаж оғоз шуд. Реҷаи намоишӣ: сервер ҳанӯз пайваст нест',
+    tPay:'Пардохтро мекушоем', tLang:'Забон иваз шуд'
+  },
+
+  en:{
+    navInvite:'Invite', navVideos:'Videos', navEdit:'Edit', navBalance:'Balance', navProfile:'Profile',
+    example:'Example', prevNote:'Your video will appear here', capTop:'this is how', capBottom:'SUBTITLES LOOK',
+    styleTitle:'Style', colorTitle:'Color', subsTitle:'Subtitles', params:'Options',
+    cAmber:'Amber', cAzure:'Azure', cLime:'Lime', cCrimson:'Crimson', cPearl:'Pearl',
+    sDesign:'Design', sSize:'Text size', sPosition:'Position',
+    oDynamic:'Dynamic', oCalm:'Calm', oBold:'Bold',
+    oMedium:'Medium', oLarge:'Large', oSmall:'Small',
+    oAuto:'Auto', oTop:'Top', oBottom:'Bottom',
+    pEmoji:'Emoji in subtitles', pSound:'Sound effects', pMedia:'Media cards',
+    pCards:'Labels and captions', pMotion:'Camera motion', pZoom:'Zoom-in at the start',
+    pHook:'Suggest a hook for the video',
+    hDesign:'How subtitles behave: calm or animated.',
+    hSize:'Size of the subtitle text on the video.',
+    hPosition:'Where to place subtitles. "Auto" picks the best spot.',
+    hEmoji:'Adds emoji to words in the subtitles.',
+    hSound:'Adds sounds on transitions and accents.',
+    hMedia:'Inserts images matching what is being said.',
+    hCards:'Captions and labels over the video.',
+    hMotion:'Subtle frame movement so the shot is not static.',
+    hZoom:'Smooth zoom in the first seconds — holds attention.',
+    hHook:'The system suggests a catchy opening line for your video.',
+    hCut:'Removes pauses and weak parts, keeping only the essentials.',
+    videoSec:'Video', videoReq:'Video requirements', upTitle:'Upload your video',
+    reqText:'Up to 3 minutes, vertical or horizontal, max 500 MB.',
+    smartCut:'Smart trimming',
+    promoTitle:'Terms',
+    promo1:'Your first video is free. See the result before you pay.',
+    promo2:'The free video keeps a watermark. After buying any package we send it again without the watermark — no tokens charged.',
+    cost:'Price', costVal:'1 edit — {n} tokens', yourBal:'Your balance', renderBtn:'Start editing — {n} tokens',
+    balTitle:'Balance', balLabel:'Balance', tokens:'tokens', enough:'Enough for', history:'Transaction history',
+    choosePack:'Choose a package', chooseHint:'Pick one of the options',
+    pack1:'Starter', pack2:'For active creators', pack3:'Content factory', popular:'POPULAR', perRoll:'per video',
+    payNote:'Pay by card or Telegram Stars',
+    refTitle:'Invite your friends',
+    refP:'You get 10% of the tokens your invitees buy — straight to your balance.',
+    yourLink:'Your link', shareBtn:'Share', copyBtn:'Copy',
+    invited:'invited', earned:'tokens earned',
+    days7:'Last 7 days', noData:'No sign-ups or payments in this period — a chart will appear here.',
+    partnerH:'Referrals pay tokens, partnership pays money',
+    partnerP:'For self-employed and sole traders — 15% of every payment from your invitees, paid in cash to your account. People you already invited start earning you money once the contract is signed.',
+    partnerMore:'Read the full terms', becomePartner:'Become a partner',
+    vidTitle:'My videos', vidEmpty:'Your edited videos will appear here', vidStartBtn:'Go to editing',
+    stReady:'Ready', stWork:'Processing', dReady:'Ready to download', dWork:'Editing',
+    profTitle:'Profile', edited:'Videos edited',
+    mTopUp:'Top up balance', mSupport:'Support', mPartner:'Referral program', mChannel:'Official channel',
+    themeLabel:'Dark theme', docs:'Documents', offer:'Public offer', privacy:'Privacy policy',
+    supTitle:'Support', supWrite:'Contact support', supSub:'We usually reply in 5–10 minutes',
+    supBtn:'Open support chat', faq:'FAQ',
+    q1:'How do I top up my balance?', a1:'Go to "Balance" → pick a package → pay by card or Stars.',
+    q2:'How long does editing take?', a2:'Usually 30–90 seconds, depending on video length.',
+    q3:'Tokens charged but no video', a3:'Contact support — we will refund the tokens or re-run the edit.',
+    langLabel:'Language', soon:'Coming soon',
+    tCopied:'Link copied', tNoGems:'Not enough tokens — top up your balance',
+    tFile:'A file picker opens here — server required', tRun:'Editing started. Demo mode: the server is not connected yet',
+    tPay:'Opening payment', tLang:'Language changed'
+  }
+};
+
+let lang = 'ru';
+function t(key){
+  const s = (I18N[lang] && I18N[lang][key]) || I18N.ru[key] || key;
+  return String(s).replace('{n}', PRICE);
+}
+
+/* =================================================================
+   5. ТЕМА
+   ================================================================= */
+let theme = 'light';
+function applyTheme(name, save){
+  theme = (name === 'light') ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeBtn').innerHTML = icon(theme === 'dark' ? 'sun' : 'moon', 18);
+  const sw = document.getElementById('themeSw');
+  if(sw) sw.checked = (theme === 'dark');
+  if(save){ try{ localStorage.setItem('tez_theme', theme); }catch(e){} }
+}
+function detectTheme(){
+  // По умолчанию всегда тёмная: бренд построен вокруг оранжевого на чёрном,
+  // в светлой теме логотип теряет своё свечение. Выбор пользователя запоминаем.
+  try{ const s = localStorage.getItem('tez_theme'); if(s) return s; }catch(e){}
+  return 'dark';
+}
+
+/* =================================================================
+   6. Telegram WebApp
+   ================================================================= */
+const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+let state = { balance:0, refCount:0, refEarn:0, renders:0, videos:[] };
+
+function haptic(type){ try{ tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred(type||'light'); }catch(e){} }
+
+function detectLang(){
+  try{ const s = localStorage.getItem('tez_lang'); if(s && I18N[s]) return s; }catch(e){}
+  const code = tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code;
+  const c = (code || navigator.language || 'ru').toLowerCase();
+  if(c.startsWith('ru')) return 'ru';
+  if(c.startsWith('tg') || c.startsWith('tj') || c.startsWith('uz')) return 'tg';
+  return 'en';
+}
+
+/* Фирменный знак: кадр киноплёнки с кнопкой воспроизведения —
+   упрощённая версия логотипа, чтобы читалась и в 30 пикселей. */
+function brandMarkSVG(){
+  return `<svg viewBox="0 0 32 32" width="30" height="30">
+    <defs>
+      <linearGradient id="tezg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#FF6A00"/>
+        <stop offset=".5" stop-color="#FF9500"/>
+        <stop offset="1" stop-color="#FFC13B"/>
+      </linearGradient>
+    </defs>
+    <rect x="2" y="4" width="28" height="24" rx="7" fill="url(#tezg)"/>
+    <g fill="rgba(10,10,13,.42)">
+      <rect x="4.8" y="8"    width="3.2" height="3.2" rx="1"/>
+      <rect x="4.8" y="14.4" width="3.2" height="3.2" rx="1"/>
+      <rect x="4.8" y="20.8" width="3.2" height="3.2" rx="1"/>
+    </g>
+    <path d="M13.5 10.2 L23.2 16 L13.5 21.8 Z" fill="#0A0A0D"/>
+  </svg>`;
+}
+
+function initStaticIcons(){
+  document.getElementById('brandMark').innerHTML = brandMarkSVG();
+  document.getElementById('chipIc').innerHTML   = icon('coins', 16);
+  document.getElementById('prevIc').innerHTML   = icon('play', 40);
+  document.getElementById('plusIc').innerHTML   = icon('plus', 22);
+  document.getElementById('cutIc').innerHTML    = icon('scissors', 18);
+  document.getElementById('giftIc').innerHTML   = icon('gift', 17);
+  document.getElementById('infoIc').innerHTML   = icon('info', 17);
+  document.getElementById('emptyIc').innerHTML  = icon('film', 44);
+  document.getElementById('renderIc').innerHTML = icon('film', 19);
+  document.getElementById('supIc').innerHTML    = icon('chat', 20);
+  document.getElementById('backIc').innerHTML   = icon('back', 18);
+  document.getElementById('nav-ref').querySelector('.ni').innerHTML     = icon('invite', 21);
+  document.getElementById('nav-videos').querySelector('.ni').innerHTML  = icon('film', 21);
+  document.getElementById('nav-balance').querySelector('.ni').innerHTML = icon('coins', 21);
+  document.getElementById('nav-profile').querySelector('.ni').innerHTML = icon('user', 21);
+  document.querySelector('#nav-editor .fab').innerHTML = icon('sparkle', 24);
+}
+
+function initTelegram(){
+  if(tg){
+    tg.ready(); tg.expand();
+    const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+    if(u){
+      document.getElementById('profName').textContent = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Гость';
+      document.getElementById('profUser').textContent = u.username ? '@'+u.username : '—';
+      document.getElementById('refLink').textContent = `https://t.me/YourBot?start=ref_${u.id}`;
+    }
+    tg.BackButton.onClick(()=>go('editor'));
+  }
+  demoData();
+  initStaticIcons();
+  applyTheme(detectTheme(), false);
+  applyLang(detectLang(), false);
+}
+
+function demoData(){
+  state.balance = 240; state.refCount = 4; state.refEarn = 96; state.renders = 3;
+  state.videos = [
+    {name:'promo_01.mp4', status:'ok'},
+    {name:'intro_02.mp4', status:'wait'},
+  ];
+}
+
+/* =================================================================
+   7. Язык
+   ================================================================= */
+function applyLang(code, notify){
+  if(!I18N[code]) code = 'ru';
+  lang = code;
+  document.documentElement.lang = code;
+  try{ localStorage.setItem('tez_lang', code); }catch(e){}
+
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.getElementById('curFlag').innerHTML = flagSVG(code);
+  document.querySelectorAll('#langMenu button').forEach(b=> b.classList.toggle('sel', b.dataset.lang === code));
+  document.querySelectorAll('#langSeg button').forEach(b=> b.classList.toggle('sel', b.dataset.lang === code));
+
+  buildEditor();
+  buildMenu();
+  render();
+  if(notify) toast(t('tLang'));
+}
+
+function initLangMenu(){
+  document.querySelectorAll('#langMenu button').forEach(b=>{
+    b.querySelector('.flag').innerHTML = flagSVG(b.dataset.lang);
+    b.addEventListener('click', e=>{
+      e.stopPropagation(); haptic('light');
+      applyLang(b.dataset.lang, true); closeLangMenu();
+    });
+  });
+  let lastToggle = 0;
+  document.getElementById('langBtn').addEventListener('click', e=>{
+    e.stopPropagation();
+    const now = Date.now();
+    if(now - lastToggle < 80) return;   // защита от дублирующихся событий WebView
+    lastToggle = now; haptic('light');
+    document.getElementById('langMenu').classList.toggle('open');
+  });
+  document.addEventListener('click', closeLangMenu);
+
+  document.querySelectorAll('#langSeg button').forEach(b=>{
+    b.addEventListener('click', ()=>{ haptic('light'); applyLang(b.dataset.lang, true); });
+  });
+  document.getElementById('themeBtn').addEventListener('click', ()=>{
+    haptic('light'); applyTheme(theme === 'dark' ? 'light' : 'dark', true);
+  });
+  document.getElementById('themeSw').addEventListener('change', e=>{
+    haptic('light'); applyTheme(e.target.checked ? 'dark' : 'light', true);
+  });
+}
+function closeLangMenu(){ document.getElementById('langMenu').classList.remove('open'); }
+
+/* =================================================================
+   8. Сборка экранов
+   ================================================================= */
+let pick = { style:0, color:0, subs:[0,0,0] };
+
+function buildEditor(){
+  document.getElementById('styleRow').innerHTML = STYLES.map((s,i)=>
+    `<button class="chip ${i===pick.style?'sel':''}" onclick="setStyle(${i})">${s}</button>`).join('');
+
+  document.getElementById('colorRow').innerHTML = COLORS.map((c,i)=>
+    `<button class="chip ${i===pick.color?'sel':''}" onclick="setColor(${i})">
+       <span class="dot" style="background:${c.dot}"></span>${t(c.key)}</button>`).join('');
+
+  // .scard — div, а не button: вложенная кнопка «?» внутри <button> ломает разметку
+  document.getElementById('subsRow').innerHTML = SUBS.map((s,i)=>
+    `<div class="scard" onclick="cycleSub(${i})">
+       <button class="q" onclick="event.stopPropagation();toast(t('${s.hint}'))">?</button>
+       <div class="itile ${s.c}">${icon(s.ic,17)}</div>
+       <div class="lbl">${t(s.key)}</div>
+       <div class="val">${t(s.opts[pick.subs[i]])}</div>
+     </div>`).join('');
+
+  document.getElementById('paramRow').innerHTML = PARAMS.map((p,i)=>
+    `<div class="pcard">
+       ${p.isNew ? '<span class="badge-new">NEW</span>' : ''}
+       <button class="q" onclick="toast(t('${p.hint}'))">?</button>
+       <div class="itile ${p.c}">${icon(p.ic,17)}</div>
+       <div class="lbl">${t(p.key)}</div>
+       <label class="sw"><input type="checkbox" ${p.on?'checked':''} onchange="PARAMS[${i}].on=this.checked"><i></i></label>
+     </div>`).join('');
+}
+
+function buildMenu(){
+  document.getElementById('profMenu').innerHTML = MENU.map(m=>
+    `<button onclick="${m.act}"><span class="itile ${m.c}">${icon(m.ic,17)}</span><span>${t(m.key)}</span><span class="arr">›</span></button>`
+  ).join('');
+}
+
+function setStyle(i){ pick.style = i; haptic('light'); buildEditor(); }
+function setColor(i){ pick.color = i; haptic('light'); buildEditor(); }
+function cycleSub(i){
+  pick.subs[i] = (pick.subs[i] + 1) % SUBS[i].opts.length;
+  haptic('light'); buildEditor();
+}
+
+/* =================================================================
+   9. Навигация
+   ================================================================= */
+const TABS = ['ref','videos','editor','balance','profile'];
+function go(id){
+  haptic('light'); closeLangMenu();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  const nav = document.getElementById('nav-'+id);
+  if(nav) nav.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+  if(tg){ TABS.includes(id) ? tg.BackButton.hide() : tg.BackButton.show(); }
+}
+
+/* =================================================================
+   10. Данные
+   ================================================================= */
+function plural(n, one, few, many){
+  const a = n % 100, b = n % 10;
+  if(a > 10 && a < 20) return many;
+  if(b === 1) return one;
+  if(b >= 2 && b <= 4) return few;
+  return many;
+}
+function wTokens(n){
+  if(lang === 'ru') return plural(n,'токен','токена','токенов');
+  if(lang === 'tg') return 'токен';
+  return n === 1 ? 'token' : 'tokens';
+}
+function wRolls(n){
+  if(lang === 'ru') return plural(n,'видео','видео','видео');
+  if(lang === 'tg') return 'видео';
+  return n === 1 ? 'video' : 'videos';
+}
+function wEdits(n){
+  if(lang === 'ru') return plural(n,'монтаж','монтажа','монтажей');
+  if(lang === 'tg') return 'монтаж';
+  return n === 1 ? 'edit' : 'edits';
+}
+
+function render(){
+  document.getElementById('balChip').textContent     = money(state.balance);
+  document.getElementById('navBadge').textContent    = money(state.balance);
+  document.getElementById('balBig').textContent      = money(state.balance);
+  document.getElementById('balEditor').textContent   = state.balance + ' ' + wTokens(state.balance);
+  document.getElementById('refCount').textContent    = state.refCount;
+  document.getElementById('refEarn').textContent     = money(state.refEarn);
+  document.getElementById('profRenders').textContent = state.renders;
+  document.querySelector('#balance .bal-big .u').textContent = wTokens(state.balance);
+
+  const k = Math.floor(state.balance / PRICE);
+  document.getElementById('balEnough').textContent = `${t('enough')} ${k} ${wEdits(k)}`;
+
+  document.getElementById('packList').innerHTML = PACKAGES.map(p=>`
+    <div class="pack ${p.badge?'hot':''}" onclick="buy('${p.id}')">
+      ${p.badge ? `<span class="badge">${t(p.badge)}</span>` : ''}
+      <div>
+        <div class="rolls"><span class="pic">${PACK_ICONS[p.id]||''}</span><b>${p.rolls}</b> ${wRolls(p.rolls)}</div>
+        <div class="pname">${t(p.name)}</div>
+        <div class="ptok">${money(p.tokens)} ${wTokens(p.tokens)}</div>
+      </div>
+      <div class="right">
+        <div class="price">${money(p.rub)} ₽</div>
+        <div class="per">${p.per} ₽ ${t('perRoll')}</div>
+      </div>
+    </div>`).join('');
+
+  const list = document.getElementById('vidList');
+  const empty = document.getElementById('vidEmpty');
+  if(state.videos.length === 0){ list.innerHTML=''; empty.style.display='block'; }
+  else{
+    empty.style.display = 'none';
+    list.innerHTML = state.videos.map(v=>{
+      const ok = v.status === 'ok';
+      return `<div class="vid">
+        <div class="thumb">${icon('play',20)}</div>
+        <div><div class="nm">${v.name}</div>
+        <div class="muted">${ok ? t('dReady') : t('dWork')}</div></div>
+        <span class="st ${ok?'ok':'wait'}">${ok ? t('stReady') : t('stWork')}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+/* =================================================================
+   11. Действия
+   ================================================================= */
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(()=>el.classList.remove('show'), 2800);
+}
+
+function fakeUpload(){ haptic('medium'); toast(t('tFile')); }
+
+function startRender(){
+  haptic('medium');
+  if(state.balance < PRICE){ toast(t('tNoGems')); go('balance'); return; }
+  const opts = {};
+  PARAMS.forEach(p=> opts[p.key] = p.on);
+  if(tg){
+    tg.sendData(JSON.stringify({
+      action:'render', lang:lang,
+      style:STYLES[pick.style], color:COLORS[pick.color].key,
+      subs:pick.subs, options:opts
+    }));
+  }
+  toast(t('tRun'));
+}
+
+function buy(packId){
+  haptic('medium');
+  const p = PACKAGES.find(x=>x.id === packId);
+  if(!p) return;
+  if(tg){
+    // суммы хранятся на сервере — из браузера передаём только id пакета
+    tg.sendData(JSON.stringify({action:'buy', pack:p.id, lang:lang}));
+    toast(t('tPay'));
+  }else{
+    toast(`Demo: ${money(p.tokens)} ${wTokens(p.tokens)} / ${money(p.rub)} ₽`);
+  }
+}
+
+function copyRef(){
+  const txt = document.getElementById('refLink').textContent;
+  try{ navigator.clipboard && navigator.clipboard.writeText(txt); }catch(e){}
+  haptic('light'); toast(t('tCopied'));
+}
+function shareRef(){
+  const txt = document.getElementById('refLink').textContent;
+  if(tg){
+    tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(txt)
+      +'&text='+encodeURIComponent(t('refTitle')));
+  }else{ toast('Demo: share'); }
+}
+function openSupport(){
+  haptic('light');
+  if(tg){ tg.openTelegramLink('https://t.me/YourSupport'); }
+  else{ toast('Demo: support'); }
+}
+function openChannel(){
+  haptic('light');
+  if(tg){ tg.openTelegramLink('https://t.me/YourChannel'); }
+  else{ toast('Demo: channel'); }
+}
+
+/* ===================== Старт ===================== */
+initLangMenu();
+initTelegram();
+</script>
+</body>
+</html>
