@@ -153,12 +153,20 @@
     position:relative;border-radius:var(--radius);overflow:hidden;margin-bottom:16px;
     aspect-ratio:9/16;max-height:320px;
     background:linear-gradient(165deg,#23243A,#111219);
-    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;
     border:1px solid var(--stroke);
+    /* отступ снизу резервирует место под субтитры: иначе в горизонтальном
+       формате превью низкое и надписи налезают друг на друга */
+    padding-bottom:58px;
+    /* min-height при пропорции 16:9 вычисляет ширину обратным счётом
+       (170 x 16/9 = 302px) и вылезает за экран — поэтому ограничиваем
+       ширину контейнером и держим минимум низким */
+    min-height:130px;
+    max-width:100%;
   }
   .preview .ph{color:rgba(255,255,255,.4);}
   .preview .note{color:rgba(255,255,255,.55);font-size:13px;}
-  .preview .cap{position:absolute;bottom:44px;left:0;right:0;text-align:center;padding:0 16px;}
+  .preview .cap{position:absolute;bottom:14px;left:0;right:0;text-align:center;padding:0 16px;}
   .preview .cap .l1{color:#fff;font-size:15px;font-weight:600;text-shadow:0 2px 10px rgba(0,0,0,.7);}
   .preview .cap .l2{color:#FBBF24;font-size:22px;font-weight:900;letter-spacing:.6px;text-shadow:0 2px 10px rgba(0,0,0,.7);}
   .ex-btn{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.14);color:#fff;border:none;
@@ -176,6 +184,25 @@
   .chip:active{transform:scale(.95);}
   .chip.sel{background:var(--solid);color:var(--solid-text);border-color:var(--solid);}
   .chip .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+
+  /* Выбор формата: вместо текста показываем саму пропорцию кадра —
+     так сразу видно, вертикальное видео или горизонтальное. */
+  .fmt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+  .fmt{background:var(--card);border:1px solid var(--stroke);border-radius:14px;
+    padding:12px 7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+    gap:8px;min-width:0;transition:transform .12s ease,border-color .15s;}
+  .fmt:active{transform:scale(.96);}
+  .fmt.sel{border-color:var(--accent);background:var(--card-2);}
+  .fmt .shape{background:var(--muted);border-radius:3px;opacity:.45;flex:none;transition:.15s;}
+  .fmt.sel .shape{background:var(--accent);opacity:1;}
+  .fmt .nm{font-size:11px;font-weight:800;letter-spacing:-.2px;}
+  .fmt .sub{font-size:9px;color:var(--muted);text-align:center;line-height:1.25;
+    overflow-wrap:break-word;}
+
+  /* Громкость музыки — отдельная широкая карточка */
+  .mrow{display:flex;align-items:center;gap:12px;background:var(--card);
+    border:1px solid var(--stroke);border-radius:14px;padding:14px;margin-top:10px;cursor:pointer;}
+  .mrow .val{margin-left:auto;font-weight:700;font-size:13.5px;color:var(--accent);white-space:nowrap;}
 
   .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
   .scard, .pcard{
@@ -351,6 +378,63 @@
     opacity:0;pointer-events:none;transition:.22s;z-index:100;max-width:88%;text-align:center;
     box-shadow:var(--shadow);}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ===== ОЧЕНЬ УЗКИЕ ОКНА =====
+     Telegram на компьютере позволяет сузить окно приложения сильнее,
+     чем экран любого телефона. Пара кнопок в ряд там уже не помещается —
+     переносим их друг под друга, чтобы ничего не вылезало. */
+  @media (max-width: 345px){
+    .app{padding:12px 12px;}
+    .row{flex-wrap:wrap;}
+    .btn.half{flex:1 1 100%;}
+    .btn.half + .btn.half{margin-top:10px;}
+    .fmt-grid{grid-template-columns:repeat(2,1fr);}
+    .g3{grid-template-columns:repeat(2,1fr);}
+    .stat{flex-wrap:wrap;}
+    .stat .box{flex:1 1 100%;}
+    .pack{flex-wrap:wrap;}
+    .pack .right{text-align:left;margin-top:8px;}
+  }
+
+  /* ===================== ШИРОКИЕ ЭКРАНЫ =====================
+     Приложение открывают не только с телефона: Telegram на компьютере
+     и в браузере даёт куда больше места. Узкая колонка посреди монитора
+     выглядит как телефон, растянутый в окно, — поэтому раскладка меняется. */
+
+  /* Планшет и небольшое окно: просто шире и больше колонок */
+  @media (min-width: 620px){
+    .app{max-width:720px;padding:16px 20px;}
+    .nav{max-width:720px;}
+    .g3{grid-template-columns:repeat(4,1fr);}
+    .brand .wm{font-size:25px;}
+    h2.page{font-size:28px;}
+  }
+
+  /* Компьютер: редактор в две колонки — превью слева закреплено,
+     настройки прокручиваются справа. Так работают настоящие редакторы. */
+  @media (min-width: 940px){
+    .app{max-width:1000px;}
+    .nav{max-width:1000px;}
+
+    /* flex, а не grid: при grid превью пришлось бы растягивать на все строки,
+       а «grid-row: 1 / -1» для неявных строк не работает — блок занимал
+       только первую строку, и остальное уезжало вниз. */
+    #editor.active{
+      display:flex;
+      align-items:flex-start;
+      gap:28px;
+    }
+    #editor > .preview{
+      width:330px;flex:none;
+      position:sticky;top:16px;
+      margin-bottom:0;
+    }
+    #editor > .ed-body{ flex:1;min-width:0; }
+    #editor > .ed-body > .section-title:first-child{ margin-top:0; }
+
+    /* остальные экраны читаются лучше в умеренной ширине */
+    #balance, #ref, #videos, #profile, #support{ max-width:660px;margin:0 auto; }
+  }
 </style>
 </head>
 <body>
@@ -388,6 +472,12 @@
       </div>
     </div>
 
+    <!-- всё, кроме превью, лежит в одной обёртке: на широком экране
+         она становится правой колонкой, а превью закрепляется слева -->
+    <div class="ed-body">
+    <div class="section-title" data-i18n="fmtTitle">Формат</div>
+    <div class="fmt-grid" id="fmtRow"></div>
+
     <div class="section-title" data-i18n="styleTitle">Стиль</div>
     <div class="scroller" id="styleRow"></div>
 
@@ -397,6 +487,10 @@
     <div class="section-title" data-i18n="subsTitle">Субтитры</div>
     <div class="g3" id="subsRow"></div>
 
+    <div class="section-title" data-i18n="audioTitle">Звук</div>
+    <div class="g3" id="audioRow"></div>
+    <div id="musicRow"></div>
+
     <div class="section-title" data-i18n="params">Параметры</div>
     <div class="g3" id="paramRow"></div>
 
@@ -404,7 +498,7 @@
       <h3 data-i18n="videoSec">Видео</h3>
       <span class="link" onclick="toast(t('reqText'))" data-i18n="videoReq">Требования к видео</span>
     </div>
-    <div class="drop" onclick="fakeUpload()">
+    <div class="drop" onclick="askVideo()">
       <div>
         <div class="t" data-i18n="upTitle">Загрузите видео</div>
         <div class="f">.mp4, .mov, .m4v, .webm, .mkv, .avi</div>
@@ -430,6 +524,7 @@
       <div style="text-align:right;"><div class="muted" data-i18n="yourBal">Ваш баланс</div><div style="font-weight:800;font-size:16px;" id="balEditor">0</div></div>
     </div>
     <button class="btn primary" onclick="startRender()" data-i18n="renderBtn">Смонтировать — 24 токена</button>
+    </div><!-- /ed-body -->
   </section>
 
   <!-- ============ БАЛАНС ============ -->
@@ -679,6 +774,24 @@ const PARAMS = [
   {key:'pZoom',   hint:'hZoom',   ic:'zoom',   c:'c6', on:true, isNew:true},
   {key:'pHook',   hint:'hHook',   ic:'zap',    c:'c7', on:false},
 ];
+/* Форматы под площадки. w/h — пропорции кадра, по ним рисуется
+   и значок выбора, и само окно предпросмотра. */
+const FORMATS = [
+  {id:'9:16', w:9,  h:16, key:'fVert',   sub:'fVertSub'},
+  {id:'16:9', w:16, h:9,  key:'fHoriz',  sub:'fHorizSub'},
+  {id:'4:5',  w:4,  h:5,  key:'fFeed',   sub:'fFeedSub'},
+  {id:'1:1',  w:1,  h:1,  key:'fSquare', sub:'fSquareSub'},
+];
+
+/* Обработка звука — то, на что у монтажёра уходит больше всего времени */
+const AUDIO = [
+  {key:'aVoice', hint:'hVoice', ic:'volume', c:'c2', on:true},
+  {key:'aNoise', hint:'hNoise', ic:'wand',   c:'c3', on:true},
+  {key:'aDuck',  hint:'hDuck',  ic:'layers', c:'c4', on:true},
+  {key:'aBoost', hint:'hBoost', ic:'zap',    c:'c1', on:false},
+];
+const MUSIC_LEVELS = ['mQuiet','mNormal','mLoud'];
+
 const MENU = [
   {key:'mTopUp',   ic:'coins',     c:'c1', act:"go('balance')"},
   {key:'mSupport', ic:'chat',      c:'c2', act:"go('support')"},
@@ -696,6 +809,19 @@ const I18N = {
     navInvite:'Пригласить', navVideos:'Видео', navEdit:'Монтаж', navBalance:'Баланс', navProfile:'Профиль',
     example:'Пример', prevNote:'Здесь появится ваше видео', capTop:'так выглядят', capBottom:'СУБТИТРЫ',
     styleTitle:'Стиль', colorTitle:'Цвет', subsTitle:'Субтитры', params:'Параметры',
+    fmtTitle:'Формат', audioTitle:'Звук',
+    fVert:'Вертикальное',   fVertSub:'Reels · Shorts · TikTok',
+    fHoriz:'Горизонтальное',fHorizSub:'YouTube · VK',
+    fFeed:'Лента',          fFeedSub:'Instagram лента',
+    fSquare:'Квадрат',      fSquareSub:'Универсальный',
+    aVoice:'Выровнять голос', aNoise:'Убрать шум',
+    aDuck:'Музыка тише под голос', aBoost:'Усилить тихие места',
+    hVoice:'Приводит громкость речи к одному уровню — зритель не крутит ползунок.',
+    hNoise:'Убирает фоновый гул, шум улицы и шипение микрофона.',
+    hDuck:'Музыка автоматически стихает, когда вы говорите, и возвращается в паузах.',
+    hBoost:'Поднимает громкость там, где вы говорили слишком тихо.',
+    musicVol:'Громкость музыки',
+    mQuiet:'Тихо', mNormal:'Средне', mLoud:'Громко',
     cAmber:'Янтарь', cAzure:'Лазурь', cLime:'Лайм', cCrimson:'Багровый', cPearl:'Жемчуг',
     sDesign:'Оформление', sSize:'Размер текста', sPosition:'Расположение',
     oDynamic:'Динамичное', oCalm:'Спокойное', oBold:'Жирное',
@@ -715,7 +841,7 @@ const I18N = {
     hZoom:'Плавный наезд в первые секунды — удерживает внимание.',
     hHook:'Система предложит цепляющую фразу для начала видео.',
     hCut:'Убирает паузы и слабые места, оставляя только суть.',
-    videoSec:'Видео', videoReq:'Требования к видео', upTitle:'Загрузите видео',
+    videoSec:'Видео', videoReq:'Требования к видео', upTitle:'Пришлите видео боту',
     reqText:'До 3 минут, вертикальное или горизонтальное, не более 500 МБ.',
     smartCut:'Умная нарезка',
     promoTitle:'Условия',
@@ -746,7 +872,7 @@ const I18N = {
     q3:'Списались токены, а видео нет', a3:'Напишите в поддержку — вернём токены или выполним монтаж заново.',
     langLabel:'Язык', soon:'Скоро будет доступно',
     tCopied:'Ссылка скопирована', tNoGems:'Недостаточно токенов — пополните баланс',
-    tFile:'Здесь откроется выбор файла — требуется сервер', tRun:'Монтаж запущен. Демо-режим: сервер пока не подключён',
+    tFile:'Закройте приложение и пришлите видео боту в чат', tRun:'Монтаж запущен. Демо-режим: сервер пока не подключён',
     tPay:'Открываем оплату', tLang:'Язык изменён'
   },
 
@@ -754,6 +880,19 @@ const I18N = {
     navInvite:'Даъват', navVideos:'Видео', navEdit:'Монтаж', navBalance:'Баланс', navProfile:'Профил',
     example:'Намуна', prevNote:'Дар ин ҷо видеои шумо пайдо мешавад', capTop:'зерунвон чунин аст', capBottom:'ЗЕРУНВОН',
     styleTitle:'Услуб', colorTitle:'Ранг', subsTitle:'Зерунвон', params:'Танзимот',
+    fmtTitle:'Формат', audioTitle:'Садо',
+    fVert:'Амудӣ',   fVertSub:'Reels · Shorts · TikTok',
+    fHoriz:'Уфуқӣ',  fHorizSub:'YouTube · VK',
+    fFeed:'Лента',   fFeedSub:'Лентаи Instagram',
+    fSquare:'Мураббаъ', fSquareSub:'Универсалӣ',
+    aVoice:'Ҳамвор кардани овоз', aNoise:'Нест кардани садои беруна',
+    aDuck:'Мусиқӣ ҳангоми гуфтор оромтар', aBoost:'Баланд кардани ҷойҳои паст',
+    hVoice:'Баландии садои нутқро ба як сатҳ меорад — бинанда танзим намекунад.',
+    hNoise:'Ғалоғулаи замина, садои кӯча ва хишир-хишири микрофонро нест мекунад.',
+    hDuck:'Ҳангоми сухани шумо мусиқӣ худкор паст мешавад ва дар таваққуф бармегардад.',
+    hBoost:'Дар ҷойҳое, ки хеле оҳиста гап задаед, садоро баланд мекунад.',
+    musicVol:'Баландии мусиқӣ',
+    mQuiet:'Паст', mNormal:'Миёна', mLoud:'Баланд',
     cAmber:'Каҳрабо', cAzure:'Нилобӣ', cLime:'Лиму', cCrimson:'Арғувон', cPearl:'Марворид',
     sDesign:'Тарҳ', sSize:'Андозаи матн', sPosition:'Ҷойгиршавӣ',
     oDynamic:'Ҷунбанда', oCalm:'Ором', oBold:'Ғафс',
@@ -773,7 +912,7 @@ const I18N = {
     hZoom:'Наздикшавии нарм дар сонияҳои аввал — диққатро нигоҳ медорад.',
     hHook:'Система барои оғози видео ибораи ҷолиб пешниҳод мекунад.',
     hCut:'Таваққуфҳо ва ҷойҳои сустро мебарорад, танҳо муҳимаш мемонад.',
-    videoSec:'Видео', videoReq:'Талабот ба видео', upTitle:'Видеоро бор кунед',
+    videoSec:'Видео', videoReq:'Талабот ба видео', upTitle:'Видеоро ба бот фиристед',
     reqText:'То 3 дақиқа, амудӣ ё уфуқӣ, на бештар аз 500 МБ.',
     smartCut:'Буриши оқилона',
     promoTitle:'Шартҳо',
@@ -804,7 +943,7 @@ const I18N = {
     q3:'Токенҳо кам шуданд, вале видео нест', a3:'Ба дастгирӣ нависед — токенҳоро бармегардонем ё монтажро аз нав мекунем.',
     langLabel:'Забон', soon:'Ба зудӣ дастрас мешавад',
     tCopied:'Пайванд нусхабардорӣ шуд', tNoGems:'Токен нокифоя — балансро пур кунед',
-    tFile:'Дар ин ҷо интихоби файл кушода мешавад — сервер лозим аст', tRun:'Монтаж оғоз шуд. Реҷаи намоишӣ: сервер ҳанӯз пайваст нест',
+    tFile:'Барномаро пӯшед ва видеоро ба бот дар чат фиристед', tRun:'Монтаж оғоз шуд. Реҷаи намоишӣ: сервер ҳанӯз пайваст нест',
     tPay:'Пардохтро мекушоем', tLang:'Забон иваз шуд'
   },
 
@@ -812,6 +951,19 @@ const I18N = {
     navInvite:'Invite', navVideos:'Videos', navEdit:'Edit', navBalance:'Balance', navProfile:'Profile',
     example:'Example', prevNote:'Your video will appear here', capTop:'this is how', capBottom:'SUBTITLES LOOK',
     styleTitle:'Style', colorTitle:'Color', subsTitle:'Subtitles', params:'Options',
+    fmtTitle:'Format', audioTitle:'Audio',
+    fVert:'Vertical',   fVertSub:'Reels · Shorts · TikTok',
+    fHoriz:'Horizontal',fHorizSub:'YouTube · VK',
+    fFeed:'Feed',       fFeedSub:'Instagram feed',
+    fSquare:'Square',   fSquareSub:'Universal',
+    aVoice:'Level the voice', aNoise:'Remove noise',
+    aDuck:'Duck music under voice', aBoost:'Boost quiet parts',
+    hVoice:'Brings speech to an even volume so viewers never touch the slider.',
+    hNoise:'Removes background hum, street noise and microphone hiss.',
+    hDuck:'Music fades automatically while you speak and returns in the pauses.',
+    hBoost:'Raises the volume where you spoke too quietly.',
+    musicVol:'Music volume',
+    mQuiet:'Quiet', mNormal:'Normal', mLoud:'Loud',
     cAmber:'Amber', cAzure:'Azure', cLime:'Lime', cCrimson:'Crimson', cPearl:'Pearl',
     sDesign:'Design', sSize:'Text size', sPosition:'Position',
     oDynamic:'Dynamic', oCalm:'Calm', oBold:'Bold',
@@ -831,7 +983,7 @@ const I18N = {
     hZoom:'Smooth zoom in the first seconds — holds attention.',
     hHook:'The system suggests a catchy opening line for your video.',
     hCut:'Removes pauses and weak parts, keeping only the essentials.',
-    videoSec:'Video', videoReq:'Video requirements', upTitle:'Upload your video',
+    videoSec:'Video', videoReq:'Video requirements', upTitle:'Send your video to the bot',
     reqText:'Up to 3 minutes, vertical or horizontal, max 500 MB.',
     smartCut:'Smart trimming',
     promoTitle:'Terms',
@@ -862,7 +1014,7 @@ const I18N = {
     q3:'Tokens charged but no video', a3:'Contact support — we will refund the tokens or re-run the edit.',
     langLabel:'Language', soon:'Coming soon',
     tCopied:'Link copied', tNoGems:'Not enough tokens — top up your balance',
-    tFile:'A file picker opens here — server required', tRun:'Editing started. Demo mode: the server is not connected yet',
+    tFile:'Close the app and send your video to the bot in chat', tRun:'Editing started. Demo mode: the server is not connected yet',
     tPay:'Opening payment', tLang:'Language changed'
   }
 };
@@ -950,28 +1102,63 @@ function initStaticIcons(){
 }
 
 function initTelegram(){
+  loadData();              // сначала читаем адрес: оттуда баланс, ссылки и имя бота
   if(tg){
     tg.ready(); tg.expand();
     const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
     if(u){
       document.getElementById('profName').textContent = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Гость';
       document.getElementById('profUser').textContent = u.username ? '@'+u.username : '—';
-      document.getElementById('refLink').textContent = `https://t.me/YourBot?start=ref_${u.id}`;
     }
     tg.BackButton.onClick(()=>go('editor'));
   }
-  demoData();
   initStaticIcons();
   applyTheme(detectTheme(), false);
   applyLang(detectLang(), false);
 }
 
-function demoData(){
-  state.balance = 240; state.refCount = 4; state.refEarn = 96; state.renders = 3;
-  state.videos = [
-    {name:'promo_01.mp4', status:'ok'},
-    {name:'intro_02.mp4', status:'wait'},
-  ];
+/* Настоящие данные бот передаёт прямо в адресе: ?bal=24&rnd=0&inv=0&earn=0
+   Своего сервера с https у нас пока нет, поэтому приложение не может
+   спросить базу само. Цифры здесь только для показа — списание всё равно
+   проверяет бот, и подменённое значение ему ничего не даст. */
+let isDemo = true;
+let links = { support:'', channel:'' };
+let botName = '';
+
+function loadData(){
+  const q = new URLSearchParams(location.search);
+  links.support = q.get('sup') || '';
+  links.channel = q.get('ch')  || '';
+  botName       = q.get('bot') || '';
+
+  // Реферальную ссылку собираем здесь, а не в блоке Telegram:
+  // id приходит в адресе, и ссылка получается даже если данные
+  // пользователя недоступны. Иначе оставался бы несуществующий YourBot.
+  const myId = q.get('uid');
+  if(botName && myId){
+    document.getElementById('refLink').textContent =
+      `https://t.me/${botName}?start=ref_${myId}`;
+  }
+  const num = (k, def) => {
+    const v = parseInt(q.get(k), 10);
+    return Number.isFinite(v) && v >= 0 ? v : def;
+  };
+
+  if(q.has('bal')){
+    isDemo = false;
+    state.balance  = num('bal', 0);
+    state.renders  = num('rnd', 0);
+    state.refCount = num('inv', 0);
+    state.refEarn  = num('earn', 0);
+    state.videos   = [];          // список роликов появится вместе с монтажом
+  }else{
+    // приложение открыли не из бота — показываем пример
+    state.balance = 240; state.refCount = 4; state.refEarn = 96; state.renders = 3;
+    state.videos = [
+      {name:'promo_01.mp4', status:'ok'},
+      {name:'intro_02.mp4', status:'wait'},
+    ];
+  }
 }
 
 /* =================================================================
@@ -1029,9 +1216,56 @@ function closeLangMenu(){ document.getElementById('langMenu').classList.remove('
 /* =================================================================
    8. Сборка экранов
    ================================================================= */
-let pick = { style:0, color:0, subs:[0,0,0] };
+let pick = { style:0, color:0, subs:[0,0,0], fmt:0, music:1 };
+
+function buildFormats(){
+  const BOX = 34;   // высота значка пропорции, пиксели
+  document.getElementById('fmtRow').innerHTML = FORMATS.map((f,i)=>{
+    // вписываем прямоугольник в квадрат BOX×BOX, сохраняя пропорцию
+    const scale = BOX / Math.max(f.w, f.h);
+    const w = Math.round(f.w * scale), h = Math.round(f.h * scale);
+    return `<div class="fmt ${i===pick.fmt?'sel':''}" onclick="setFmt(${i})">
+      <div style="height:${BOX}px;display:flex;align-items:center;">
+        <div class="shape" style="width:${w}px;height:${h}px;"></div>
+      </div>
+      <div class="nm">${f.id}</div>
+      <div class="sub">${t(f.sub)}</div>
+    </div>`;
+  }).join('');
+
+  // превью принимает выбранную пропорцию — видно, каким будет кадр
+  const f = FORMATS[pick.fmt];
+  const prev = document.querySelector('.preview');
+  prev.style.aspectRatio = `${f.w}/${f.h}`;
+  prev.style.maxHeight = (f.h >= f.w) ? '320px' : 'none';
+}
+
+function buildAudio(){
+  document.getElementById('audioRow').innerHTML = AUDIO.map((a,i)=>
+    `<div class="pcard">
+       <button class="q" onclick="toast(t('${a.hint}'))">?</button>
+       <div class="itile ${a.c}">${icon(a.ic,17)}</div>
+       <div class="lbl">${t(a.key)}</div>
+       <label class="sw"><input type="checkbox" ${a.on?'checked':''} onchange="AUDIO[${i}].on=this.checked"><i></i></label>
+     </div>`).join('');
+
+  document.getElementById('musicRow').innerHTML =
+    `<div class="mrow" onclick="cycleMusic()">
+       <span class="itile c6">${icon('volume',17)}</span>
+       <span style="font-weight:700;font-size:14px;">${t('musicVol')}</span>
+       <span class="val">${t(MUSIC_LEVELS[pick.music])}</span>
+     </div>`;
+}
+
+function setFmt(i){ pick.fmt = i; haptic('light'); buildFormats(); }
+function cycleMusic(){
+  pick.music = (pick.music + 1) % MUSIC_LEVELS.length;
+  haptic('light'); buildAudio();
+}
 
 function buildEditor(){
+  buildFormats();
+  buildAudio();
   document.getElementById('styleRow').innerHTML = STYLES.map((s,i)=>
     `<button class="chip ${i===pick.style?'sel':''}" onclick="setStyle(${i})">${s}</button>`).join('');
 
@@ -1167,18 +1401,29 @@ function toast(msg){
   window._tt = setTimeout(()=>el.classList.remove('show'), 2800);
 }
 
-function fakeUpload(){ haptic('medium'); toast(t('tFile')); }
+/* Файл грузится не через приложение, а прямо боту в чат: мини-приложению
+   для загрузки нужен свой сервер с https, которого у нас нет.
+   Поэтому закрываем окно и возвращаем человека в переписку с ботом. */
+function askVideo(){
+  haptic('medium');
+  toast(t('tFile'));
+  if(tg){ setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 1400); }
+}
 
 function startRender(){
   haptic('medium');
   if(state.balance < PRICE){ toast(t('tNoGems')); go('balance'); return; }
   const opts = {};
   PARAMS.forEach(p=> opts[p.key] = p.on);
+  const audio = {};
+  AUDIO.forEach(a=> audio[a.key] = a.on);
   if(tg){
     tg.sendData(JSON.stringify({
       action:'render', lang:lang,
+      format:FORMATS[pick.fmt].id,
       style:STYLES[pick.style], color:COLORS[pick.color].key,
-      subs:pick.subs, options:opts
+      subs:pick.subs, options:opts,
+      audio:audio, music:MUSIC_LEVELS[pick.music]
     }));
   }
   toast(t('tRun'));
@@ -1209,16 +1454,15 @@ function shareRef(){
       +'&text='+encodeURIComponent(t('refTitle')));
   }else{ toast('Demo: share'); }
 }
-function openSupport(){
+/* Ссылки приходят от бота в адресе — чтобы они задавались
+   в одном месте, в config.txt, а не дублировались в коде. */
+function openLink(url, label){
   haptic('light');
-  if(tg){ tg.openTelegramLink('https://t.me/YourSupport'); }
-  else{ toast('Demo: support'); }
+  if(tg && url){ tg.openTelegramLink(url); }
+  else{ toast(url || ('Demo: ' + label)); }
 }
-function openChannel(){
-  haptic('light');
-  if(tg){ tg.openTelegramLink('https://t.me/YourChannel'); }
-  else{ toast('Demo: channel'); }
-}
+function openSupport(){ openLink(links.support, 'support'); }
+function openChannel(){ openLink(links.channel, 'channel'); }
 
 /* ===================== Старт ===================== */
 initLangMenu();
