@@ -827,14 +827,14 @@ const I18N = {
     oDynamic:'Динамичное', oCalm:'Спокойное', oBold:'Жирное',
     oMedium:'Средний', oLarge:'Крупный', oSmall:'Мелкий',
     oAuto:'Авто', oTop:'Сверху', oBottom:'Снизу',
-    pEmoji:'Эмодзи в субтитрах', pSound:'Звуковые эффекты', pMedia:'Медиа-карточки',
+    pEmoji:'Эмодзи в субтитрах', pSound:'Фоновая музыка', pMedia:'Медиа-карточки',
     pCards:'Плашки и подписи', pMotion:'Движение камеры', pZoom:'Наезд камеры в начале',
     pHook:'Подобрать хук к видео',
     hDesign:'Как ведут себя субтитры: спокойно или с анимацией.',
     hSize:'Размер текста субтитров на видео.',
     hPosition:'Где разместить субтитры. «Авто» выбирает лучшее место.',
     hEmoji:'Добавляет эмодзи к словам в субтитрах.',
-    hSound:'Подставляет звуки на переходах и акцентах.',
+    hSound:'Подбирает трек из библиотеки и подкладывает под видео.',
     hMedia:'Вставляет изображения по смыслу сказанного.',
     hCards:'Подписи и плашки поверх видео.',
     hMotion:'Лёгкое движение кадра, чтобы картинка не была статичной.',
@@ -870,9 +870,10 @@ const I18N = {
     q1:'Как пополнить баланс?', a1:'Раздел «Баланс» → выберите пакет → оплата картой или Stars.',
     q2:'Сколько занимает монтаж?', a2:'В среднем 30–90 секунд в зависимости от длины видео.',
     q3:'Списались токены, а видео нет', a3:'Напишите в поддержку — вернём токены или выполним монтаж заново.',
+    vipShort:'Безлимит', vipNote:'Вы в списке своих — монтаж без списания',
     langLabel:'Язык', soon:'Скоро будет доступно',
-    tCopied:'Ссылка скопирована', tNoGems:'Недостаточно токенов — пополните баланс',
-    tFile:'Закройте приложение и пришлите видео боту в чат', tRun:'Монтаж запущен. Демо-режим: сервер пока не подключён',
+    tCopied:'Ссылка скопирована', tCopyFail:'Не вышло скопировать — выделите ссылку вручную', tNoGems:'Недостаточно токенов — пополните баланс',
+    tFile:'Закройте приложение и пришлите видео боту в чат', tRun:'Запускаю монтаж…', tOpenBot:'Откройте бота и нажмите кнопку запуска',
     tPay:'Открываем оплату', tLang:'Язык изменён'
   },
 
@@ -898,14 +899,14 @@ const I18N = {
     oDynamic:'Ҷунбанда', oCalm:'Ором', oBold:'Ғафс',
     oMedium:'Миёна', oLarge:'Калон', oSmall:'Хурд',
     oAuto:'Худкор', oTop:'Боло', oBottom:'Поён',
-    pEmoji:'Эмодзи дар зерунвон', pSound:'Эффектҳои садо', pMedia:'Кортҳои медиа',
+    pEmoji:'Эмодзи дар зерунвон', pSound:'Мусиқии заминавӣ', pMedia:'Кортҳои медиа',
     pCards:'Лавҳаҳо ва навиштаҷот', pMotion:'Ҳаракати камера', pZoom:'Наздикшавии камера дар аввал',
     pHook:'Интихоби ҳук барои видео',
     hDesign:'Зерунвонҳо чӣ гуна рафтор мекунанд: ором ё бо аниматсия.',
     hSize:'Андозаи матни зерунвон дар видео.',
     hPosition:'Зерунвонҳо дар куҷо ҷойгир шаванд. «Худкор» беҳтаринро интихоб мекунад.',
     hEmoji:'Ба калимаҳои зерунвон эмодзи илова мекунад.',
-    hSound:'Дар гузаришҳо ва таъкидҳо садо мегузорад.',
+    hSound:'Аз китобхона оҳанг интихоб карда, зери видео мегузорад.',
     hMedia:'Мувофиқи гуфтор тасвирҳо мегузорад.',
     hCards:'Навиштаҷот ва лавҳаҳо дар болои видео.',
     hMotion:'Ҳаракати сабуки кадр, то тасвир статикӣ набошад.',
@@ -941,9 +942,10 @@ const I18N = {
     q1:'Чӣ тавр балансро пур кунам?', a1:'Бахши «Баланс» → бастаро интихоб кунед → пардохт бо корт ё Stars.',
     q2:'Монтаж чанд вақт мегирад?', a2:'Ба ҳисоби миёна 30–90 сония, вобаста ба дарозии видео.',
     q3:'Токенҳо кам шуданд, вале видео нест', a3:'Ба дастгирӣ нависед — токенҳоро бармегардонем ё монтажро аз нав мекунем.',
+    vipShort:'Бемаҳдуд', vipNote:'Шумо дар рӯйхати худиҳо — монтаж бе пардохт',
     langLabel:'Забон', soon:'Ба зудӣ дастрас мешавад',
-    tCopied:'Пайванд нусхабардорӣ шуд', tNoGems:'Токен нокифоя — балансро пур кунед',
-    tFile:'Барномаро пӯшед ва видеоро ба бот дар чат фиристед', tRun:'Монтаж оғоз шуд. Реҷаи намоишӣ: сервер ҳанӯз пайваст нест',
+    tCopied:'Пайванд нусхабардорӣ шуд', tCopyFail:'Нусхабардорӣ нашуд — пайвандро дастӣ интихоб кунед', tNoGems:'Токен нокифоя — балансро пур кунед',
+    tFile:'Барномаро пӯшед ва видеоро ба бот дар чат фиристед', tRun:'Монтажро оғоз мекунам…', tOpenBot:'Ботро кушоед ва тугмаи оғозро пахш кунед',
     tPay:'Пардохтро мекушоем', tLang:'Забон иваз шуд'
   },
 
@@ -969,14 +971,14 @@ const I18N = {
     oDynamic:'Dynamic', oCalm:'Calm', oBold:'Bold',
     oMedium:'Medium', oLarge:'Large', oSmall:'Small',
     oAuto:'Auto', oTop:'Top', oBottom:'Bottom',
-    pEmoji:'Emoji in subtitles', pSound:'Sound effects', pMedia:'Media cards',
+    pEmoji:'Emoji in subtitles', pSound:'Background music', pMedia:'Media cards',
     pCards:'Labels and captions', pMotion:'Camera motion', pZoom:'Zoom-in at the start',
     pHook:'Suggest a hook for the video',
     hDesign:'How subtitles behave: calm or animated.',
     hSize:'Size of the subtitle text on the video.',
     hPosition:'Where to place subtitles. "Auto" picks the best spot.',
     hEmoji:'Adds emoji to words in the subtitles.',
-    hSound:'Adds sounds on transitions and accents.',
+    hSound:'Picks a track from the library and lays it under the video.',
     hMedia:'Inserts images matching what is being said.',
     hCards:'Captions and labels over the video.',
     hMotion:'Subtle frame movement so the shot is not static.',
@@ -1012,12 +1014,17 @@ const I18N = {
     q1:'How do I top up my balance?', a1:'Go to "Balance" → pick a package → pay by card or Stars.',
     q2:'How long does editing take?', a2:'Usually 30–90 seconds, depending on video length.',
     q3:'Tokens charged but no video', a3:'Contact support — we will refund the tokens or re-run the edit.',
+    vipShort:'Unlimited', vipNote:'You are on the free list — no tokens charged',
     langLabel:'Language', soon:'Coming soon',
-    tCopied:'Link copied', tNoGems:'Not enough tokens — top up your balance',
-    tFile:'Close the app and send your video to the bot in chat', tRun:'Editing started. Demo mode: the server is not connected yet',
+    tCopied:'Link copied', tCopyFail:'Copy failed — select the link manually', tNoGems:'Not enough tokens — top up your balance',
+    tFile:'Close the app and send your video to the bot in chat', tRun:'Starting the edit…', tOpenBot:'Open the bot and press the start button',
     tPay:'Opening payment', tLang:'Language changed'
   }
 };
+
+// Порядок важен: по нему язык кодируется в ссылку для бота.
+// Тот же порядок лежит в LANG_LIST в bot.py — менять только вместе.
+const LANGS = ['ru', 'tg', 'en'];
 
 let lang = 'ru';
 function t(key){
@@ -1122,6 +1129,7 @@ function initTelegram(){
    спросить базу само. Цифры здесь только для показа — списание всё равно
    проверяет бот, и подменённое значение ему ничего не даст. */
 let isDemo = true;
+let isVip = false;              // свой человек: монтаж без списания
 let links = { support:'', channel:'' };
 let botName = '';
 
@@ -1143,6 +1151,8 @@ function loadData(){
     const v = parseInt(q.get(k), 10);
     return Number.isFinite(v) && v >= 0 ? v : def;
   };
+
+  isVip = q.get('vip') === '1';
 
   if(q.has('bal')){
     isDemo = false;
@@ -1348,19 +1358,31 @@ function wEdits(n){
 }
 
 function render(){
-  document.getElementById('balChip').textContent     = money(state.balance);
-  document.getElementById('navBadge').textContent    = money(state.balance);
-  document.getElementById('balBig').textContent      = money(state.balance);
-  document.getElementById('balEditor').textContent   = state.balance + ' ' + wTokens(state.balance);
+  // у своих вместо цифры — знак безлимита
+  const chip = isVip ? '∞' : money(state.balance);
+  document.getElementById('balChip').textContent     = chip;
+  document.getElementById('navBadge').textContent    = chip;
+  document.getElementById('balBig').textContent      = chip;
+  document.getElementById('balEditor').textContent   = isVip
+    ? t('vipShort') : state.balance + ' ' + wTokens(state.balance);
   document.getElementById('refCount').textContent    = state.refCount;
   document.getElementById('refEarn').textContent     = money(state.refEarn);
   document.getElementById('profRenders').textContent = state.renders;
-  document.querySelector('#balance .bal-big .u').textContent = wTokens(state.balance);
+  document.querySelector('#balance .bal-big .u').textContent =
+    isVip ? '' : wTokens(state.balance);
 
   const k = Math.floor(state.balance / PRICE);
-  document.getElementById('balEnough').textContent = `${t('enough')} ${k} ${wEdits(k)}`;
+  document.getElementById('balEnough').textContent = isVip
+    ? t('vipNote') : `${t('enough')} ${k} ${wEdits(k)}`;
 
-  document.getElementById('packList').innerHTML = PACKAGES.map(p=>`
+  // своим пакеты не нужны — прячем блок покупки.
+  // Без return: ниже ещё отрисовывается список роликов.
+  const hide = isVip ? 'none' : '';
+  document.querySelector('#balance .section-title').style.display = hide;
+  document.querySelector('[data-i18n="chooseHint"]').style.display = hide;
+  document.querySelector('[data-i18n="payNote"]').style.display = hide;
+
+  document.getElementById('packList').innerHTML = isVip ? '' : PACKAGES.map(p=>`
     <div class="pack ${p.badge?'hot':''}" onclick="buy('${p.id}')">
       ${p.badge ? `<span class="badge">${t(p.badge)}</span>` : ''}
       <div>
@@ -1410,23 +1432,61 @@ function askVideo(){
   if(tg){ setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 1400); }
 }
 
+/* Все настройки в коротком коде для ссылки.
+   Telegram разрешает в такой ссылке не больше 64 символов,
+   поэтому каждое значение занимает один символ. */
+const B36 = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+function settingsCode(){
+  const bits = arr => arr.reduce((acc, on, i) => acc | (on ? 1 << i : 0), 0);
+  const p = bits(PARAMS.map(x => x.on));          // 7 переключателей -> 0..127
+  const a = bits(AUDIO.map(x => x.on));           // 4 переключателя  -> 0..15
+  const cut = document.querySelector('.cutrow input').checked ? 1 : 0;
+  const nums = [
+    pick.fmt, pick.style, pick.color,
+    pick.subs[0], pick.subs[1], pick.subs[2],
+    Math.floor(p / 36), p % 36,                   // 7 бит не влезают в один символ
+    a, pick.music, cut, Math.max(0, LANGS.indexOf(lang)),
+  ];
+  return 'm' + nums.map(n => B36[n] || '0').join('');
+}
+
 function startRender(){
   haptic('medium');
-  if(state.balance < PRICE){ toast(t('tNoGems')); go('balance'); return; }
-  const opts = {};
-  PARAMS.forEach(p=> opts[p.key] = p.on);
-  const audio = {};
-  AUDIO.forEach(a=> audio[a.key] = a.on);
-  if(tg){
+  if(!isVip && state.balance < PRICE){ toast(t('tNoGems')); go('balance'); return; }
+
+  const opts = {};  PARAMS.forEach(p => opts[p.key] = p.on);
+  const audio = {}; AUDIO.forEach(a => audio[a.key] = a.on);
+
+  if(!tg){ toast(t('tRun')); return; }
+
+  // Обычный способ. Работает, только если приложение открыли кнопкой
+  // нижней клавиатуры — иначе Telegram молча ничего не отправит.
+  try{
     tg.sendData(JSON.stringify({
       action:'render', lang:lang,
       format:FORMATS[pick.fmt].id,
       style:STYLES[pick.style], color:COLORS[pick.color].key,
       subs:pick.subs, options:opts,
-      audio:audio, music:MUSIC_LEVELS[pick.music]
+      audio:audio, music:MUSIC_LEVELS[pick.music],
+      smart_cut:document.querySelector('.cutrow input').checked
     }));
-  }
+  }catch(e){}
+
   toast(t('tRun'));
+
+  // Если отправка сработала, приложение уже закрылось и этот код
+  // не выполнится. Остались на экране — значит не сработало,
+  // передаём настройки боту через ссылку.
+  setTimeout(()=>{
+    if(botName){
+      try{
+        tg.openTelegramLink('https://t.me/' + botName + '?start=' + settingsCode());
+      }catch(e){ toast(t('tOpenBot')); }
+    }else{
+      toast(t('tOpenBot'));
+    }
+  }, 1200);
 }
 
 function buy(packId){
@@ -1444,8 +1504,31 @@ function buy(packId){
 
 function copyRef(){
   const txt = document.getElementById('refLink').textContent;
-  try{ navigator.clipboard && navigator.clipboard.writeText(txt); }catch(e){}
-  haptic('light'); toast(t('tCopied'));
+  haptic('light');
+
+  // Раньше тут стоял try/catch, но он не ловит отказ: буфер обмена
+  // отвечает обещанием. Ошибка улетала в пустоту, а человеку
+  // показывалось «скопировано», хотя ничего не скопировалось.
+  const done = () => toast(t('tCopied'));
+
+  const oldWay = () => {
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok ? done() : toast(t('tCopyFail'));
+    }catch(e){ toast(t('tCopyFail')); }
+  };
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(oldWay);
+  }else{
+    oldWay();
+  }
 }
 function shareRef(){
   const txt = document.getElementById('refLink').textContent;
