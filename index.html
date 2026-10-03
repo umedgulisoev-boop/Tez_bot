@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TEZ</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- шрифты превью — те же, что бот ставит на видео -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@1,700&family=Montserrat:wght@400;600;800;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
 <style>
   /* ===================== ТЕМЫ =====================
      Палитра сдержанная: индиго + фиолетовый, без карнавальных цветов.
@@ -148,30 +152,109 @@
   .btn+.btn{margin-top:10px;}
   .btn.half{width:auto;flex:1;}
 
-  /* ===================== МОНТАЖ ===================== */
-  .preview{
-    position:relative;border-radius:var(--radius);overflow:hidden;margin-bottom:16px;
-    aspect-ratio:9/16;max-height:320px;
-    background:linear-gradient(165deg,#23243A,#111219);
-    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;
-    border:1px solid var(--stroke);
-    /* отступ снизу резервирует место под субтитры: иначе в горизонтальном
-       формате превью низкое и надписи налезают друг на друга */
-    padding-bottom:58px;
-    /* min-height при пропорции 16:9 вычисляет ширину обратным счётом
-       (170 x 16/9 = 302px) и вылезает за экран — поэтому ограничиваем
-       ширину контейнером и держим минимум низким */
-    min-height:130px;
-    max-width:100%;
-  }
-  .preview .ph{color:rgba(255,255,255,.4);}
-  .preview .note{color:rgba(255,255,255,.55);font-size:13px;}
-  .preview .cap{position:absolute;bottom:14px;left:0;right:0;text-align:center;padding:0 16px;}
-  .preview .cap .l1{color:#fff;font-size:15px;font-weight:600;text-shadow:0 2px 10px rgba(0,0,0,.7);}
-  .preview .cap .l2{color:#FBBF24;font-size:22px;font-weight:900;letter-spacing:.6px;text-shadow:0 2px 10px rgba(0,0,0,.7);}
-  .ex-btn{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.14);color:#fff;border:none;
-    border-radius:9px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;
-    backdrop-filter:blur(6px);}
+  /* ===================== МОНТАЖ =====================
+     Главное — одна большая кнопка «Отправить видео». Всё остальное
+     необязательно: TEZ сам решает, как монтировать. */
+  .hero{position:relative;overflow:hidden;border-radius:22px;padding:22px 18px 18px;
+    background:linear-gradient(160deg,#1E1710 0%,#141419 55%);border:1px solid rgba(255,149,0,.28);
+    box-shadow:var(--shadow);}
+  :root[data-theme="light"] .hero{background:linear-gradient(160deg,#FFF3E0 0%,#FFFFFF 60%);}
+  .hero-glow{position:absolute;top:-80px;right:-60px;width:220px;height:220px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,149,0,.35),transparent 70%);pointer-events:none;}
+  .hero .kicker{color:var(--accent);}
+  .hero-t{position:relative;margin:8px 0 16px;font-size:24px;line-height:1.18;font-weight:900;
+    letter-spacing:-.6px;}
+  .steps{position:relative;display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+  .step{display:flex;gap:11px;align-items:flex-start;font-size:14px;line-height:1.4;font-weight:600;}
+  .step .sn{width:24px;height:24px;border-radius:8px;flex:none;display:flex;align-items:center;
+    justify-content:center;font-size:12.5px;font-weight:900;background:var(--grad);color:#1A0F00;}
+  .btn.big{display:flex;align-items:center;justify-content:center;gap:10px;padding:17px;font-size:16.5px;
+    position:relative;}
+  .hero-note{position:relative;margin-top:12px;text-align:center;font-size:13.5px;font-weight:700;
+    color:var(--muted);}
+  .hero-note b{color:var(--accent);}
+  .hero-note .lnk{color:var(--accent);text-decoration:underline;cursor:pointer;}
+
+  .sec-head .opt{font-size:12px;color:var(--muted);font-weight:600;}
+  /* карточки стилей: мини-кадр с подписью ровно тем шрифтом, что будет на видео */
+  .st-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .stc{background:var(--card);border:1.5px solid var(--stroke);border-radius:15px;padding:7px;cursor:pointer;
+    min-width:0;transition:transform .12s ease,border-color .15s;}
+  .stc:active{transform:scale(.97);}
+  .stc.sel{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,149,0,.18);}
+  .stc .ph{position:relative;aspect-ratio:9/12;border-radius:10px;overflow:hidden;
+    background:radial-gradient(circle at 50% 30%,#5B4A3C 0 16%,transparent 17%),
+               radial-gradient(ellipse at 50% 78%,#3A3330 0 34%,transparent 35%),
+               linear-gradient(170deg,#2B2622,#151316);
+    display:flex;align-items:flex-end;justify-content:center;padding:0 4px 12%;}
+  .stc .cap{line-height:1.02;width:100%;text-shadow:0 1px 3px rgba(0,0,0,.55),0 0 6px rgba(0,0,0,.35);}
+  .stc .nm{font-size:13px;font-weight:800;margin:8px 3px 1px;}
+  .stc .ds{font-size:11px;color:var(--muted);margin:0 3px 3px;line-height:1.3;}
+  /* «Студия»: главное слово широким жирным, мелкие слова рядом */
+  .cap-studio{display:inline-flex;flex-direction:column;width:auto!important;color:#fff;}
+  .cap-studio .s{font:600 10px/1.1 Montserrat,sans-serif;}
+  .cap-studio .k{font:900 25px/0.95 Montserrat,sans-serif;color:var(--pv,#fff);letter-spacing:-.3px;}
+  .cap-studio .s2{align-self:flex-end;}
+  /* «Типографика»: огромное узкое слово, мелкие разнесены по ширине */
+  .cap-type{display:inline-flex;flex-direction:column;width:auto!important;color:#fff;}
+  .cap-type .row{display:flex;justify-content:space-between;font:400 8.5px/1.2 Montserrat,sans-serif;}
+  .cap-type .k{font:700 33px/0.95 Oswald,sans-serif;text-transform:uppercase;color:var(--pv,#fff);}
+  /* «Эксперт»: жирно, фирменным цветом со свечением, курсивный акцент */
+  .cap-expert{display:flex;align-items:baseline;justify-content:center;gap:2px;}
+  .cap-expert .sc{font:italic 700 30px/1 Cormorant,serif;color:var(--pv,#2F80FF);transform:rotate(-6deg);
+    text-shadow:0 0 8px rgba(255,255,255,.55);}
+  .cap-expert .k{font:900 17px/1 Montserrat,sans-serif;color:#fff;}
+
+  /* фон за человеком: мини-кадр с силуэтом на каждом фоне */
+  .bg-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+  .bgc{cursor:pointer;text-align:center;min-width:0;}
+  .bgc .tile{position:relative;aspect-ratio:3/4;border-radius:11px;border:1.5px solid var(--stroke);overflow:hidden;
+    transition:transform .12s ease,border-color .15s;}
+  .bgc:active .tile{transform:scale(.96);}
+  .bgc.sel .tile{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,149,0,.18);}
+  .bgc .tile::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(circle at 50% 40%,#C9A27F 0 15%,transparent 16%),
+               radial-gradient(ellipse at 50% 100%,#3B3B3E 0 42%,transparent 43%);}
+  .bgc .nm{font-size:11px;font-weight:700;margin-top:5px;color:var(--muted);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;}
+  .bgc.sel .nm{color:var(--text);}
+  .bg-none {background:linear-gradient(90deg,#B3262B 0 24%,transparent 24%),
+                       linear-gradient(180deg,transparent 0 18%,#6FA0C8 18% 40%,transparent 40%),
+                       linear-gradient(160deg,#7A5A40,#3A2B20);}
+  .bg-blur {background:radial-gradient(circle at 15% 35%,rgba(200,50,50,.75),transparent 40%),
+                       radial-gradient(circle at 80% 25%,rgba(120,170,210,.7),transparent 42%),
+                       linear-gradient(160deg,#7A5A40,#3A2B20);filter:saturate(.9);}
+  .bg-dark {background:radial-gradient(ellipse at 50% 36%,#2E2E32,#0E0E0F 72%);}
+  .bg-green{background:radial-gradient(ellipse at 50% 36%,#165C46,#06140F 72%);}
+  .bg-warm {background:radial-gradient(ellipse at 50% 36%,#6E3A16,#160C06 72%);}
+  .bg-hint{font-size:12px;color:var(--muted);margin:8px 2px 0;line-height:1.4;}
+
+  /* переключатели «что делать с видео» */
+  .tlist{background:var(--card);border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden;}
+  .trow{display:flex;align-items:center;gap:12px;padding:13px 14px;}
+  .trow+.trow{border-top:1px solid var(--stroke);}
+  .trow .tx{flex:1;min-width:0;}
+  .trow .tt{font-weight:700;font-size:14.5px;}
+  .trow .th{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.35;}
+  .center{text-align:center;}
+
+  /* цветные плашки под иконки. Вся гамма — тёплая, из логотипа:
+     холодные цвета спорят с брендом */
+  .itile{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;}
+  .c1{background:rgba(255,193,59,.15); color:#FFC13B;}
+  .c2{background:rgba(255,149,0,.15);  color:#FF9500;}
+  .c3{background:rgba(255,106,0,.15);  color:#FF7A1F;}
+  .c4{background:rgba(255,138,61,.15); color:#FF8A3D;}
+  .c5{background:rgba(255,94,58,.15);  color:#FF6E4A;}
+  .c6{background:rgba(255,214,102,.15);color:#FFD666;}
+  .c7{background:rgba(224,123,0,.15);  color:#E8900C;}
+  :root[data-theme="light"] .c1{color:#B07400;}
+  :root[data-theme="light"] .c2{color:#C2660A;}
+  :root[data-theme="light"] .c3{color:#C2410C;}
+  :root[data-theme="light"] .c4{color:#B85A1A;}
+  :root[data-theme="light"] .c5{color:#C0442B;}
+  :root[data-theme="light"] .c6{color:#A07A00;}
+  :root[data-theme="light"] .c7{color:#A86A00;}
 
   .scroller{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;}
   .scroller::-webkit-scrollbar{display:none;}
@@ -204,53 +287,6 @@
     border:1px solid var(--stroke);border-radius:14px;padding:14px;margin-top:10px;cursor:pointer;}
   .mrow .val{margin-left:auto;font-weight:700;font-size:13.5px;color:var(--accent);white-space:nowrap;}
 
-  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-  .scard, .pcard{
-    background:var(--card);border:1px solid var(--stroke);border-radius:14px;padding:13px 12px;
-    position:relative;min-height:118px;display:flex;flex-direction:column;gap:9px;
-    text-align:left;color:var(--text);
-    min-width:0;          /* иначе длинное слово распирает колонку сетки */
-  }
-  .scard .lbl, .pcard .lbl{flex:1;}
-  .scard{cursor:pointer;transition:transform .12s ease;}
-  .scard:active{transform:scale(.97);}
-  /* таджикские слова длиннее русских — разрешаем перенос внутри слова,
-     иначе «Наздикшавии» не влезает в узкую колонку и ломает вёрстку */
-  /* Значок «?» теперь в одном ряду с иконкой, а не с подписью —
-     поэтому отступ справа подписи не нужен, и слова перестают рваться. */
-  .scard .lbl, .pcard .lbl{font-size:12px;font-weight:700;line-height:1.3;
-    overflow-wrap:break-word;hyphens:auto;}
-  .scard .val{overflow-wrap:anywhere;}
-  .scard .val{font-size:13px;color:var(--accent);margin-top:10px;font-weight:700;}
-  /* цветные плашки под иконки — именно они оживляют интерфейс.
-     Цвет кодирует смысл: каждый раздел получает свой оттенок. */
-  /* Вся гамма — тёплая, из логотипа: от золота до жжёного оранжевого.
-     Холодных цветов (синий, зелёный) сознательно нет — они спорят с брендом. */
-  .itile{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;}
-  .c1{background:rgba(255,193,59,.15); color:#FFC13B;}  /* золото     */
-  .c2{background:rgba(255,149,0,.15);  color:#FF9500;}  /* оранжевый  */
-  .c3{background:rgba(255,106,0,.15);  color:#FF7A1F;}  /* насыщенный */
-  .c4{background:rgba(255,138,61,.15); color:#FF8A3D;}  /* персик     */
-  .c5{background:rgba(255,94,58,.15);  color:#FF6E4A;}  /* коралл     */
-  .c6{background:rgba(255,214,102,.15);color:#FFD666;}  /* мёд        */
-  .c7{background:rgba(224,123,0,.15);  color:#E8900C;}  /* янтарь     */
-  /* на светлом фоне золото нечитаемо — берём тона темнее */
-  :root[data-theme="light"] .c1{color:#B07400;}
-  :root[data-theme="light"] .c2{color:#C2660A;}
-  :root[data-theme="light"] .c3{color:#C2410C;}
-  :root[data-theme="light"] .c4{color:#B85A1A;}
-  :root[data-theme="light"] .c5{color:#C0442B;}
-  :root[data-theme="light"] .c6{color:#A07A00;}
-  :root[data-theme="light"] .c7{color:#A86A00;}
-
-  .q{position:absolute;top:10px;right:9px;width:17px;height:17px;border-radius:50%;
-    border:1px solid var(--stroke);background:transparent;color:var(--muted);
-    font-size:10px;line-height:1;cursor:pointer;font-family:inherit;padding:0;
-    display:flex;align-items:center;justify-content:center;font-weight:700;}
-  .badge-new{position:absolute;top:-7px;right:8px;font-size:9px;font-weight:800;letter-spacing:.06em;
-    background:var(--grad);color:#fff;padding:3px 7px;border-radius:5px;
-    box-shadow:0 3px 10px -3px rgba(255,138,0,.75);}
-
   .sw{position:relative;width:42px;height:25px;flex:none;display:inline-block;}
   .sw input{opacity:0;width:0;height:0;position:absolute;}
   .sw i{position:absolute;inset:0;background:var(--sw-off);border-radius:999px;transition:.2s;cursor:pointer;display:block;}
@@ -258,22 +294,8 @@
     background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
   .sw input:checked + i{background:var(--sw-on);}
   .sw input:checked + i::after{transform:translateX(17px);}
-
   .sec-head{display:flex;align-items:center;justify-content:space-between;margin:22px 2px 10px;}
   .sec-head h3{margin:0;font-size:16px;font-weight:800;letter-spacing:-.2px;}
-  .sec-head .link{font-size:13px;color:var(--muted);border-bottom:1px dashed var(--muted);cursor:pointer;}
-  .drop{border:1.5px dashed var(--stroke);border-radius:var(--radius);padding:20px 16px;background:var(--card);
-    display:flex;align-items:center;gap:14px;cursor:pointer;}
-  .drop .t{font-weight:800;font-size:15px;}
-  .drop .f{font-size:12px;color:var(--muted);margin-top:3px;}
-  .drop .plus{margin-left:auto;width:46px;height:46px;border-radius:12px;flex:none;
-    background:var(--solid);color:var(--solid-text);
-    display:flex;align-items:center;justify-content:center;}
-
-  .cutrow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--stroke);
-    border-radius:14px;padding:14px;margin-top:12px;}
-  .cutrow .ic{width:34px;height:34px;border-radius:9px;background:var(--card-2);flex:none;color:var(--accent);
-    display:flex;align-items:center;justify-content:center;}
 
   .promo{background:var(--promo-bg);border-radius:var(--radius);padding:16px;margin-top:12px;}
   .promo .p{display:flex;gap:11px;font-size:13.5px;line-height:1.5;align-items:flex-start;}
@@ -299,6 +321,42 @@
     background:var(--grad);color:#fff;padding:3px 9px;border-radius:5px;
     box-shadow:0 3px 10px -3px rgba(255,138,0,.75);}
   .pack .pic{margin-right:10px;}
+  /* годовая подписка — отдельная, заметная карточка */
+  .pack.subc{border:1.5px solid transparent;
+    background:linear-gradient(var(--card),var(--card)) padding-box, var(--grad) border-box;
+    box-shadow:0 10px 30px -14px rgba(255,138,0,.55);}
+  .pack.subc .sname{font-weight:900;font-size:17px;letter-spacing:-.3px;}
+  .pack.subc .sdesc{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.4;max-width:210px;}
+  .pack.subc.on{opacity:.85;}
+  .sub-on{margin-top:12px;padding:10px 12px;border-radius:12px;font-weight:700;font-size:13.5px;
+    background:rgba(255,149,0,.12);color:var(--accent);line-height:1.4;}
+  .legal-note{text-align:center;margin:4px 8px 0;font-size:12px;line-height:1.5;}
+  .legal-note a{color:var(--accent);text-decoration:underline;cursor:pointer;}
+
+  /* документы: удобное чтение длинного текста */
+  .doc{background:var(--card);border:1px solid var(--stroke);border-radius:var(--radius);
+    padding:18px 16px;font-size:14px;line-height:1.62;}
+  .doc .ed{font-size:12px;color:var(--muted);margin-bottom:12px;}
+  .doc .note{font-size:12.5px;color:var(--muted);background:var(--card-2);border-radius:10px;
+    padding:10px 12px;margin-bottom:14px;}
+  .doc h3{font-size:15.5px;margin:20px 0 8px;letter-spacing:-.2px;}
+  .doc h3:first-of-type{margin-top:6px;}
+  .doc p{margin:0 0 8px;}
+  .doc ul{margin:0 0 8px;padding-left:20px;}
+  .doc li{margin:3px 0;}
+  .doc table{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:13px;}
+  .doc td{padding:7px 6px;border-bottom:1px solid var(--stroke);}
+  .doc td:last-child{text-align:right;white-space:nowrap;font-weight:700;}
+  .doc .flash{animation:flash 1.6s ease;}
+  @keyframes flash{0%{background:rgba(255,149,0,.25)}100%{background:transparent}}
+
+  /* реферальная статистика и правила */
+  .stat7{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap;}
+  .stat7 div{display:flex;align-items:baseline;gap:7px;}
+  .stat7 b{font-size:24px;letter-spacing:-.5px;}
+  .stat7 span{font-size:12.5px;color:var(--muted);}
+  ol.rules{margin:10px 0 0;padding-left:20px;font-size:13.5px;line-height:1.5;}
+  ol.rules li{margin:5px 0;}
 
   /* ===================== ПРИГЛАСИТЬ ===================== */
   .ref-code{background:var(--card-2);border:1px solid var(--stroke);border-radius:11px;
@@ -315,15 +373,17 @@
 
   /* ===================== РОЛИКИ ===================== */
   .vid{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--stroke);
-    background:var(--card);border-radius:14px;margin-bottom:10px;}
-  .vid .thumb{width:46px;height:58px;border-radius:9px;flex:none;color:rgba(255,255,255,.55);
-    background:linear-gradient(165deg,#23243A,#111219);display:flex;align-items:center;justify-content:center;}
+    background:var(--card);border-radius:14px;margin-bottom:10px;cursor:pointer;
+    transition:transform .12s ease;}
+  .vid:active{transform:scale(.985);}
+  /* обложка в цветах стиля, которым смонтирован ролик */
+  .vid .thumb{width:46px;height:58px;border-radius:9px;flex:none;color:#fff;
+    background:linear-gradient(165deg,#3A2A18,#141217);display:flex;align-items:center;justify-content:center;
+    font:900 8px/1.1 Montserrat,sans-serif;text-transform:uppercase;text-align:center;padding:2px;
+    text-shadow:0 1px 2px #000;overflow:hidden;word-break:break-word;}
   .vid .nm{font-weight:700;font-size:14px;}
-  .vid .st{font-size:11px;padding:4px 9px;border-radius:6px;margin-left:auto;font-weight:700;white-space:nowrap;}
-  .st.ok{background:rgba(22,163,74,.13);color:#15803D;}
-  .st.wait{background:rgba(79,70,229,.13);color:#4F46E5;}
-  :root[data-theme="dark"] .st.ok{color:#4ADE80;}
-  :root[data-theme="dark"] .st.wait{color:#A5B4FC;}
+  .vid .st{font-size:11.5px;padding:6px 10px;border-radius:8px;margin-left:auto;font-weight:800;white-space:nowrap;
+    background:rgba(255,149,0,.14);color:var(--accent);}
   .empty{text-align:center;color:var(--muted);padding:44px 10px;}
   .empty .ic{display:flex;justify-content:center;margin-bottom:12px;opacity:.5;}
 
@@ -389,7 +449,7 @@
     .btn.half{flex:1 1 100%;}
     .btn.half + .btn.half{margin-top:10px;}
     .fmt-grid{grid-template-columns:repeat(2,1fr);}
-    .g3{grid-template-columns:repeat(2,1fr);}
+    .st-grid{grid-template-columns:repeat(2,1fr);}
     .stat{flex-wrap:wrap;}
     .stat .box{flex:1 1 100%;}
     .pack{flex-wrap:wrap;}
@@ -405,7 +465,7 @@
   @media (min-width: 620px){
     .app{max-width:720px;padding:16px 20px;}
     .nav{max-width:720px;}
-    .g3{grid-template-columns:repeat(4,1fr);}
+    .st-grid{grid-template-columns:repeat(5,1fr);}
     .brand .wm{font-size:25px;}
     h2.page{font-size:28px;}
   }
@@ -424,13 +484,13 @@
       align-items:flex-start;
       gap:28px;
     }
-    #editor > .preview{
-      width:330px;flex:none;
+    #editor > .hero{
+      width:360px;flex:none;
       position:sticky;top:16px;
-      margin-bottom:0;
     }
     #editor > .ed-body{ flex:1;min-width:0; }
-    #editor > .ed-body > .section-title:first-child{ margin-top:0; }
+    #editor > .ed-body > .sec-head:first-child{ margin-top:0; }
+    .st-grid{grid-template-columns:repeat(3,1fr);}
 
     /* остальные экраны читаются лучше в умеренной ширине */
     #balance, #ref, #videos, #profile, #support{ max-width:660px;margin:0 auto; }
@@ -460,71 +520,62 @@
     <div class="bal-chip" onclick="go('balance')"><span id="chipIc"></span><span id="balChip">0</span></div>
   </div>
 
-  <!-- ============ МОНТАЖ ============ -->
+  <!-- ============ МОНТАЖ ============
+       Одна главная кнопка. Стиль ниже — по желанию: TEZ и без него
+       сам решает, как смонтировать. -->
   <section class="screen active" id="editor">
-    <div class="preview">
-      <button class="ex-btn" onclick="toast(t('soon'))" data-i18n="example">Пример</button>
-      <span class="ph" id="prevIc"></span>
-      <div class="note" data-i18n="prevNote">Здесь появится ваше видео</div>
-      <div class="cap">
-        <div class="l1" data-i18n="capTop">так выглядят</div>
-        <div class="l2" data-i18n="capBottom">СУБТИТРЫ</div>
+    <div class="hero">
+      <div class="hero-glow"></div>
+      <div class="kicker" data-i18n="heroKicker">Монтаж без вопросов</div>
+      <h1 class="hero-t" data-i18n="heroTitle">Пришлите видео — остальное TEZ сделает сам</h1>
+      <div class="steps">
+        <div class="step"><span class="sn">1</span><span data-i18n="step1">Отправьте ролик в чат с ботом</span></div>
+        <div class="step"><span class="sn">2</span><span data-i18n="step2">TEZ уберёт паузы, поставит субтитры, музыку и переходы</span></div>
+        <div class="step"><span class="sn">3</span><span data-i18n="step3">Через минуту — готовое видео</span></div>
       </div>
+      <button class="btn primary big" onclick="askVideo()"><span id="sendIc"></span><span data-i18n="sendBtn">Отправить видео</span></button>
+      <div class="hero-note" id="heroNote"></div>
     </div>
 
-    <!-- всё, кроме превью, лежит в одной обёртке: на широком экране
-         она становится правой колонкой, а превью закрепляется слева -->
     <div class="ed-body">
-    <div class="section-title" data-i18n="fmtTitle">Формат</div>
-    <div class="fmt-grid" id="fmtRow"></div>
-
-    <div class="section-title" data-i18n="styleTitle">Стиль</div>
-    <div class="scroller" id="styleRow"></div>
-
-    <div class="section-title" data-i18n="colorTitle">Цвет</div>
-    <div class="scroller" id="colorRow"></div>
-
-    <div class="section-title" data-i18n="subsTitle">Субтитры</div>
-    <div class="g3" id="subsRow"></div>
-
-    <div class="section-title" data-i18n="audioTitle">Звук</div>
-    <div class="g3" id="audioRow"></div>
-    <div id="musicRow"></div>
-
-    <div class="section-title" data-i18n="params">Параметры</div>
-    <div class="g3" id="paramRow"></div>
-
-    <div class="sec-head">
-      <h3 data-i18n="videoSec">Видео</h3>
-      <span class="link" onclick="toast(t('reqText'))" data-i18n="videoReq">Требования к видео</span>
-    </div>
-    <div class="drop" onclick="askVideo()">
-      <div>
-        <div class="t" data-i18n="upTitle">Загрузите видео</div>
-        <div class="f">.mp4, .mov, .m4v, .webm, .mkv, .avi</div>
+      <div class="sec-head" style="margin-top:24px">
+        <h3 data-i18n="myStyle">Ваш стиль</h3><span class="opt" data-i18n="optional">по желанию</span>
       </div>
-      <div class="plus" id="plusIc"></div>
-    </div>
+      <div class="st-grid" id="styleGrid"></div>
 
-    <div class="cutrow">
-      <div class="itile c5" id="cutIc"></div>
-      <div style="font-weight:700;font-size:14.5px;" data-i18n="smartCut">Умная нарезка</div>
-      <button class="q" style="position:static;margin-left:auto;" onclick="toast(t('hCut'))">?</button>
-      <label class="sw"><input type="checkbox" checked><i></i></label>
-    </div>
+      <div class="section-title" data-i18n="accentTitle">Цвет акцента</div>
+      <div class="scroller" id="accentRow"></div>
 
-    <div class="section-title" data-i18n="promoTitle">Условия</div>
-    <div class="promo">
-      <div class="p"><span class="itile c3" id="giftIc"></span><span data-i18n="promo1">Первое видео — бесплатно. Посмотрите результат, прежде чем оплачивать.</span></div>
-      <div class="p"><span class="itile c1" id="infoIc"></span><span data-i18n="promo2">На бесплатном видео остаётся водяной знак. После оплаты любого пакета мы пришлём его без знака — токены за это не списываются.</span></div>
-    </div>
+      <div class="section-title" data-i18n="bgTitle">Фон за вами</div>
+      <div class="bg-grid" id="bgRow"></div>
+      <div class="bg-hint" id="bgHint"></div>
 
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;">
-      <div><div class="muted" data-i18n="cost">Стоимость</div><div style="font-weight:800;font-size:16px;" data-i18n="costVal">1 монтаж — 24 токена</div></div>
-      <div style="text-align:right;"><div class="muted" data-i18n="yourBal">Ваш баланс</div><div style="font-weight:800;font-size:16px;" id="balEditor">0</div></div>
+      <div class="section-title" data-i18n="musicTitle">Музыка</div>
+      <div class="scroller" id="moodRow"></div>
+      <div id="musicRow"></div>
+
+      <div class="section-title" data-i18n="fmtTitle">Формат</div>
+      <div class="fmt-grid" id="fmtRow"></div>
+
+      <div class="section-title" data-i18n="whatTitle">Что делать с видео</div>
+      <div class="tlist" id="toggleList"></div>
+
+      <div class="section-title" data-i18n="cleanTitle">Чистка голоса от шума</div>
+      <div class="seg" id="cleanSeg"></div>
+
+      <div class="section-title" data-i18n="speechTitle">Язык речи в видео</div>
+      <div class="seg" id="speechSeg"></div>
+
+      <button class="btn primary" style="margin-top:20px" onclick="savePrefs()" data-i18n="saveBtn">Сохранить стиль</button>
+      <p class="muted center" style="margin:10px 4px 0;line-height:1.45" data-i18n="saveNote">Стиль запомнится для всех следующих видео. Поменять можно в любой момент.</p>
+
+      <div class="section-title" data-i18n="promoTitle">Условия</div>
+      <div class="promo">
+        <div class="p"><span class="itile c3" id="giftIc"></span><span data-i18n="promo1">Первое видео — бесплатно. Посмотрите результат, прежде чем платить.</span></div>
+        <div class="p"><span class="itile c1" id="infoIc"></span><span data-i18n="promo2">На бесплатном видео — небольшой значок TEZ. В оплаченных его нет.</span></div>
+        <div class="p"><span class="itile c2" id="hdIc"></span><span data-i18n="promo3">Для лучшего качества отправляйте видео файлом: скрепка → Файл.</span></div>
+      </div>
     </div>
-    <button class="btn primary" onclick="startRender()" data-i18n="renderBtn">Смонтировать — 24 токена</button>
-    </div><!-- /ed-body -->
   </section>
 
   <!-- ============ БАЛАНС ============ -->
@@ -535,13 +586,14 @@
       <div class="kicker" data-i18n="balLabel">Баланс</div>
       <div class="bal-big"><span id="balBig">0</span> <span class="u" data-i18n="tokens">токенов</span></div>
       <div class="muted" style="margin-top:3px;" id="balEnough">Хватит на 0 монтажей</div>
-      <button class="btn solid" style="margin-top:16px;" onclick="toast(t('soon'))" data-i18n="history">История операций</button>
+      <div class="sub-on" id="subOn" style="display:none"></div>
+      <button class="btn solid" style="margin-top:16px;" onclick="openHistory()" data-i18n="history">История операций</button>
     </div>
 
-    <div class="section-title" data-i18n="choosePack">Выберите пакет</div>
+    <div class="section-title" id="buyTitle" data-i18n="choosePack">Пакеты и подписка</div>
     <div id="packList"></div>
-    <p class="muted" style="text-align:center;margin:2px 0 0;font-size:13px;" data-i18n="chooseHint">Выберите один из вариантов</p>
-    <p class="muted" style="text-align:center;margin-top:12px;font-size:12px;" data-i18n="payNote">Оплата картой или Telegram Stars</p>
+    <p class="muted legal-note" id="offerNote"></p>
+    <p class="muted" id="payNoteP" style="text-align:center;margin-top:6px;font-size:12px;" data-i18n="payNote">Оплата Telegram Stars</p>
   </section>
 
   <!-- ============ ПРИГЛАСИТЬ ============ -->
@@ -566,26 +618,47 @@
 
     <div class="card">
       <div class="kicker" data-i18n="days7">За 7 дней</div>
-      <p class="muted" style="margin:8px 0 0;" data-i18n="noData">За этот период нет ни регистраций, ни оплат — здесь появится график.</p>
+      <div class="stat7" id="stat7" style="display:none">
+        <div><b id="r7">0</b><span data-i18n="r7l">пришли по ссылке</span></div>
+        <div><b id="e7">0</b><span data-i18n="e7l">токенов заработано</span></div>
+      </div>
+      <p class="muted" id="noData7" style="margin:8px 0 0;" data-i18n="noData">Пока тихо — поделитесь ссылкой, и здесь появятся приглашённые.</p>
+    </div>
+
+    <div class="card">
+      <div class="kicker" data-i18n="refRulesT">Как это работает</div>
+      <ol class="rules">
+        <li data-i18n="refRule1">Друг впервые открывает бота по вашей ссылке.</li>
+        <li data-i18n="refRule2">С каждой его покупки вам приходит 10% токенами — навсегда.</li>
+        <li data-i18n="refRule3">За регистрацию и бесплатное видео друга токены не начисляются — только за покупки.</li>
+      </ol>
     </div>
 
     <div class="hint-box">
       <h4 data-i18n="partnerH">Рефералка — токены, партнёрство — деньги</h4>
       <p data-i18n="partnerP">Самозанятым и ИП — 15% с каждой оплаты приглашённых, рублями на ваши реквизиты. Люди, которых вы уже пригласили, тоже начнут приносить доход после оформления договора.</p>
-      <span class="more" onclick="toast(t('soon'))" data-i18n="partnerMore">Подробнее об условиях</span>
+      <span class="more" onclick="openDoc('offer','ref')" data-i18n="partnerMore">Подробнее об условиях</span>
     </div>
 
-    <button class="btn primary" onclick="toast(t('soon'))" data-i18n="becomePartner">Стать партнёром</button>
+    <button class="btn primary" onclick="becomePartner()" data-i18n="becomePartner">Стать партнёром</button>
   </section>
 
-  <!-- ============ РОЛИКИ ============ -->
+  <!-- ============ РОЛИКИ ============
+       Готовые ролики хранит Telegram. Список приходит от бота в адресе,
+       а по нажатию бот присылает ролик в чат — мгновенно, без новой загрузки. -->
   <section class="screen" id="videos">
     <h2 class="page" data-i18n="vidTitle">Мои видео</h2>
+    <div class="card row">
+      <div class="itile c4" id="vidIc" style="width:42px;height:42px"></div>
+      <div><div style="font-size:24px;font-weight:800;letter-spacing:-.5px" id="vidCount">0</div>
+      <div class="muted" data-i18n="vidCount">Смонтировано видео</div></div>
+    </div>
     <div id="vidList"></div>
+    <p class="muted center" id="vidHint" style="display:none;margin:4px 6px 0;line-height:1.45" data-i18n="vidHint">Нажмите на видео — бот пришлёт его в чат.</p>
     <div class="empty" id="vidEmpty">
       <div class="ic" id="emptyIc"></div>
-      <p data-i18n="vidEmpty">Здесь появятся ваши смонтированные видео</p>
-      <button class="btn primary" style="max-width:230px;margin:0 auto;" onclick="go('editor')" data-i18n="vidStartBtn">Перейти к монтажу</button>
+      <p data-i18n="vidEmpty" style="line-height:1.5">Здесь появятся ваши смонтированные видео.</p>
+      <button class="btn primary" style="max-width:260px;margin:0 auto;" onclick="askVideo()" data-i18n="vidStartBtn">Отправить видео</button>
     </div>
   </section>
 
@@ -621,8 +694,8 @@
 
     <div class="section-title" data-i18n="docs">Документы</div>
     <div class="menu">
-      <button onclick="toast(t('soon'))"><span data-i18n="offer">Публичная оферта</span><span class="arr">›</span></button>
-      <button onclick="toast(t('soon'))"><span data-i18n="privacy">Политика конфиденциальности</span><span class="arr">›</span></button>
+      <button onclick="openDoc('offer')"><span class="itile c1" id="offerIc"></span><span data-i18n="offer">Публичная оферта</span><span class="arr">›</span></button>
+      <button onclick="openDoc('privacy')"><span class="itile c2" id="privIc"></span><span data-i18n="privacy">Политика конфиденциальности</span><span class="arr">›</span></button>
     </div>
   </section>
 
@@ -641,9 +714,19 @@
       <button class="btn primary" style="margin-top:14px;" onclick="openSupport()" data-i18n="supBtn">Открыть чат поддержки</button>
     </div>
     <div class="section-title" data-i18n="faq">Частые вопросы</div>
+    <div class="card"><div style="font-weight:700;" data-i18n="q0">Как смонтировать видео?</div><div class="muted" style="margin-top:6px;" data-i18n="a0">Просто пришлите видео боту в чат.</div></div>
     <div class="card"><div style="font-weight:700;" data-i18n="q1">Как пополнить баланс?</div><div class="muted" style="margin-top:6px;" data-i18n="a1">Раздел «Баланс» → выберите пакет → оплата картой или Stars.</div></div>
     <div class="card"><div style="font-weight:700;" data-i18n="q2">Сколько занимает монтаж?</div><div class="muted" style="margin-top:6px;" data-i18n="a2">В среднем 30–90 секунд в зависимости от длины видео.</div></div>
     <div class="card"><div style="font-weight:700;" data-i18n="q3">Списались токены, а видео нет</div><div class="muted" style="margin-top:6px;" data-i18n="a3">Напишите в поддержку — вернём токены или выполним монтаж заново.</div></div>
+  </section>
+
+  <!-- ============ ДОКУМЕНТ ============ -->
+  <section class="screen" id="doc">
+    <div class="sub-head">
+      <button class="back" onclick="closeDoc()" id="docBack">‹</button>
+      <h2 id="docTitle">Документ</h2>
+    </div>
+    <div class="doc" id="docBody"></div>
   </section>
 
 </div>
@@ -677,21 +760,17 @@ const ICONS = {
   scissors:'<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/>',
   gift:  '<rect x="2" y="7" width="20" height="5" rx="1"/><path d="M4 12v9h16v-9M12 7v14"/><path d="M12 7S10.8 3 8.5 3a2.5 2.5 0 0 0 0 4.5zM12 7s1.2-4 3.5-4a2.5 2.5 0 0 1 0 4.5z"/>',
   info:  '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
-  plus:  '<path d="M12 5v14M5 12h14"/>',
-  smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
   volume:'<path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>',
-  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
   layers:'<path d="M12 2L2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>',
-  move:  '<path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>',
-  zoom:  '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/>',
   zap:   '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
   type:  '<path d="M4 7V5h16v2M9 19h6M12 5v14"/>',
-  align: '<path d="M3 6h18M3 12h12M3 18h18"/>',
   wand:  '<path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8l1.4 1.4M17.8 6.2l1.4-1.4M12.2 6.2l-1.4-1.4"/><path d="M14.5 9.5L3 21"/>',
   moon:  '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
   sun:   '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   play:  '<circle cx="12" cy="12" r="10"/><path d="M10 8.5l6 3.5-6 3.5z"/>',
   back:  '<path d="M15 18l-6-6 6-6"/>',
+  send:  '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+  hd:    '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M7 9v6M11 9v6M7 12h4M14 9v6h2a3 3 0 0 0 0-6z"/>',
 };
 const FILLED = {
   sparkle:'<path d="M12 2.5l2.1 6.1 6.4 2.1-6.4 2.1L12 19l-2.1-6.2L3.5 10.7l6.4-2.1z"/>',
@@ -740,291 +819,390 @@ function flagSVG(code){
 }
 
 /* =================================================================
-   3. ЭКОНОМИКА
+   3. ЭКОНОМИКА — цифры те же, что в bot.py
    ================================================================= */
 const PRICE = 24;
+/* Цены — те же, что в PACKAGES в bot.py (сверяет test_prices.py).
+   Чем больше пакет, тем дешевле одно видео:
+   ⭐ за видео 3 → 100, 5 → 95, 10 → 90, 25 → 84, 50 → 78. */
 const PACKAGES = [
-  { id:'p10', rolls:10, tokens:240,  rub:1490, per:149, name:'pack1' },
-  { id:'p25', rolls:25, tokens:590,  rub:3490, per:139, name:'pack2', badge:'popular' },
-  { id:'p50', rolls:50, tokens:1170, rub:6490, per:129, name:'pack3' },
+  { id:'p3',  rolls:3,  tokens:72,   rub:490,  stars:300,  name:'packP3' },
+  { id:'p5',  rolls:5,  tokens:120,  rub:790,  stars:475,  name:'packP5' },
+  { id:'p10', rolls:10, tokens:240,  rub:1490, stars:900,  name:'pack1' },
+  { id:'p25', rolls:25, tokens:600,  rub:3490, stars:2100, name:'pack2', badge:'popular' },
+  { id:'p50', rolls:50, tokens:1200, rub:6490, stars:3900, name:'pack3' },
 ];
+/* Годовая подписка: монтаж без токенов 365 дней, до 10 видео в сутки */
+const SUBSCRIPTION = { id:'year', days:365, daily:10, rub:16490, stars:9900, refBonus:264 };
 function money(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
-
-const STYLES = ['Billboard','Feather','Nouveau','Modernist','Chisel'];
-const COLORS = [
-  {key:'cAmber',  dot:'#F59E0B'},
-  {key:'cAzure',  dot:'#3B82F6'},
-  {key:'cLime',   dot:'#84CC16'},
-  {key:'cCrimson',dot:'#DC2626'},
-  {key:'cPearl',  dot:'#D1D5DB'},
-];
-/* У каждого элемента свой значок и цвет — так экран читается
-   с одного взгляда, а не как сплошная стена текста. */
-const SUBS = [
-  {key:'sDesign',   hint:'hDesign',   ic:'wand',  c:'c4', opts:['oDynamic','oCalm','oBold']},
-  {key:'sSize',     hint:'hSize',     ic:'type',  c:'c2', opts:['oMedium','oLarge','oSmall']},
-  {key:'sPosition', hint:'hPosition', ic:'align', c:'c3', opts:['oAuto','oTop','oBottom']},
-];
-const PARAMS = [
-  {key:'pEmoji',  hint:'hEmoji',  ic:'smile',  c:'c1', on:false},
-  {key:'pSound',  hint:'hSound',  ic:'volume', c:'c2', on:true},
-  {key:'pMedia',  hint:'hMedia',  ic:'image',  c:'c3', on:true},
-  {key:'pCards',  hint:'hCards',  ic:'layers', c:'c4', on:true},
-  {key:'pMotion', hint:'hMotion', ic:'move',   c:'c5', on:true},
-  {key:'pZoom',   hint:'hZoom',   ic:'zoom',   c:'c6', on:true, isNew:true},
-  {key:'pHook',   hint:'hHook',   ic:'zap',    c:'c7', on:false},
-];
-/* Форматы под площадки. w/h — пропорции кадра, по ним рисуется
-   и значок выбора, и само окно предпросмотра. */
-const FORMATS = [
-  {id:'9:16', w:9,  h:16, key:'fVert',   sub:'fVertSub'},
-  {id:'16:9', w:16, h:9,  key:'fHoriz',  sub:'fHorizSub'},
-  {id:'4:5',  w:4,  h:5,  key:'fFeed',   sub:'fFeedSub'},
-  {id:'1:1',  w:1,  h:1,  key:'fSquare', sub:'fSquareSub'},
-];
-
-/* Обработка звука — то, на что у монтажёра уходит больше всего времени */
-const AUDIO = [
-  {key:'aVoice', hint:'hVoice', ic:'volume', c:'c2', on:true},
-  {key:'aNoise', hint:'hNoise', ic:'wand',   c:'c3', on:true},
-  {key:'aDuck',  hint:'hDuck',  ic:'layers', c:'c4', on:true},
-  {key:'aBoost', hint:'hBoost', ic:'zap',    c:'c1', on:false},
-];
-const MUSIC_LEVELS = ['mQuiet','mNormal','mLoud'];
-
-const MENU = [
-  {key:'mTopUp',   ic:'coins',     c:'c1', act:"go('balance')"},
-  {key:'mSupport', ic:'chat',      c:'c2', act:"go('support')"},
-  {key:'mPartner', ic:'invite',    c:'c3', act:"go('ref')"},
-  {key:'mChannel', ic:'megaphone', c:'c4', act:"openChannel()"},
-];
-/* значки пакетов — те же, что в боте */
-const PACK_ICONS = { p10:'🚀', p25:'🔥', p50:'👑' };
+let payWith = 'stars';           // бот принимает Telegram Stars — цены показываем в них же
+function priceOf(p){ return payWith === 'stars' ? `${money(p.stars)} ⭐` : `${money(p.rub)} ₽`; }
+function perOf(p){
+  return payWith === 'stars' ? `${Math.round(p.stars / p.rolls)} ⭐` : `${Math.round(p.rub / p.rolls)} ₽`;
+}
+function perMonth(p){
+  return payWith === 'stars' ? `${money(Math.round(p.stars / 12))} ⭐` : `${money(Math.round(p.rub / 12))} ₽`;
+}
 
 /* =================================================================
-   4. ПЕРЕВОДЫ — тон деловой, обращение на «вы»
+   4. СТИЛЬ ПО УМОЛЧАНИЮ
+      Списки и порядок — те же, что в bot.py (FMT_LIST, STYLE_LIST...).
+      Код уходит боту в ссылке /start, поэтому менять только вместе.
+   ================================================================= */
+const B36 = '0123456789abcdefghijklmnopqrstuvwxyz';
+const FMT_LIST    = ['9:16','16:9','4:5','1:1'];
+const STYLE_LIST  = ['auto','studio','type','expert'];
+const ACCENT_LIST = ['auto','gold','yellow','green','red','blue','pink','white'];
+const MOOD_LIST   = ['auto','energetic','calm','dramatic','none'];
+const LEVEL_LIST  = ['mQuiet','mNormal','mLoud'];
+const FLAG_KEYS   = ['captions','hook','cut','effects','sfx'];
+const CLEAN_LIST  = ['auto','on','off'];
+const SPEECH_LIST = ['auto','ru','tg','en'];
+// Фон за человеком (BG_LIST в bot.py). Новые — только в конец списка
+const BG_LIST     = ['none','blur','dark','green','warm'];
+// Порядок важен: по нему язык кодируется в ссылку для бота (LANG_LIST в bot.py)
+const LANGS = ['ru', 'tg', 'en'];
+
+const DEFAULT_PREFS = {
+  format:'9:16', style:'auto', accent:'auto', mood:'auto', music:'mNormal',
+  captions:true, hook:true, cut:true, effects:true, sfx:true, clean:'auto', speech:'auto',
+  bg:'none',
+};
+let prefs = Object.assign({}, DEFAULT_PREFS);
+
+const ACCENT_HEX = { gold:'#FFC13B', yellow:'#FFE03D', green:'#3DFF7A', red:'#FF4545',
+                     blue:'#2F80FF', pink:'#FF5FD2', white:'#FFFFFF' };
+// Как в captions.py: «Студия» и «Типографика» — белые, «Эксперт» — синий
+const STYLE_DEFAULT_ACCENT = { auto:'white', studio:'white', type:'white', expert:'blue' };
+
+/* Карточки стилей. Превью нарисовано тем же шрифтом, что бот ставит на видео. */
+const capStudio = ()=>`<div class="cap cap-studio"><span class="s">${t('pvStA')}</span><span class="k">${t('pvStB')}</span><span class="s s2">${t('pvStC')}</span></div>`;
+const STYLE_CARDS = [
+  { id:'auto',   key:'stAuto',   hint:'stAutoD',   cap:capStudio },
+  { id:'studio', key:'stStudio', hint:'stStudioD', cap:capStudio },
+  { id:'type',   key:'stType',   hint:'stTypeD',
+    cap:()=>`<div class="cap cap-type"><div class="row">${t('pvTyA').split(' ').map(w=>`<span>${w}</span>`).join('')}</div><span class="k">${t('pvTyB')}</span><div class="row">${t('pvTyC').split(' ').map(w=>`<span>${w}</span>`).join('')}</div></div>` },
+  { id:'expert', key:'stExpert', hint:'stExpertD',
+    cap:()=>`<div class="cap cap-expert"><span class="sc">${t('pvExA')}</span><span class="k">${t('pvExB')}</span></div>` },
+];
+const FORMATS = [
+  {id:'9:16', w:9,  h:16, sub:'fVertSub'},
+  {id:'16:9', w:16, h:9,  sub:'fHorizSub'},
+  {id:'4:5',  w:4,  h:5,  sub:'fFeedSub'},
+  {id:'1:1',  w:1,  h:1,  sub:'fSquareSub'},
+];
+const MOODS = [
+  {id:'auto', key:'moAuto', dot:'conic-gradient(#FF9500,#4ADE80,#F472B6,#FF9500)'},
+  {id:'energetic', key:'moEnergetic', dot:'#FF9500'},
+  {id:'calm', key:'moCalm', dot:'#4ADE80'},
+  {id:'dramatic', key:'moDramatic', dot:'#F472B6'},
+  {id:'none', key:'moNone', dot:'transparent'},
+];
+const TOGGLES = [
+  {id:'captions', key:'tgCaptions', hint:'hgCaptions', ic:'type',     c:'c1'},
+  {id:'hook',     key:'tgHook',     hint:'hgHook',     ic:'zap',      c:'c2'},
+  {id:'cut',      key:'tgCut',      hint:'hgCut',      ic:'scissors', c:'c3'},
+  {id:'effects',  key:'tgEffects',  hint:'hgEffects',  ic:'layers',   c:'c4'},
+  {id:'sfx',      key:'tgSfx',      hint:'hgSfx',      ic:'volume',   c:'c5'},
+];
+
+function prefsCode(){
+  const flags = FLAG_KEYS.reduce((acc, k, i) => acc | (prefs[k] ? 1 << i : 0), 0);
+  const nums = [
+    FMT_LIST.indexOf(prefs.format), STYLE_LIST.indexOf(prefs.style),
+    ACCENT_LIST.indexOf(prefs.accent), MOOD_LIST.indexOf(prefs.mood),
+    LEVEL_LIST.indexOf(prefs.music), flags, CLEAN_LIST.indexOf(prefs.clean),
+    SPEECH_LIST.indexOf(prefs.speech), Math.max(0, LANGS.indexOf(lang)),
+    Math.max(0, BG_LIST.indexOf(prefs.bg)),
+  ];
+  return 's' + nums.map(n => B36[Math.max(0, n)] || '0').join('');
+}
+
+function decodePrefs(code){
+  // 11 знаков; старые ссылки на 10 знаков — без фона («как есть»)
+  if(!code || code[0] !== 's' || (code.length !== 11 && code.length !== 10)) return null;
+  const n = code.slice(1).split('').map(ch => B36.indexOf(ch));
+  if(n.some(x => x < 0)) return null;
+  if(n.length < 10) n.push(0);
+  const pick = (lst, i) => n[i] < lst.length ? lst[n[i]] : null;
+  const out = {
+    format:pick(FMT_LIST,0), style:pick(STYLE_LIST,1), accent:pick(ACCENT_LIST,2),
+    mood:pick(MOOD_LIST,3), music:pick(LEVEL_LIST,4), clean:pick(CLEAN_LIST,6),
+    speech:pick(SPEECH_LIST,7), bg:pick(BG_LIST,9),
+  };
+  FLAG_KEYS.forEach((k, i) => out[k] = !!(n[5] >> i & 1));
+  if(Object.values(out).some(v => v === null) || n[5] > 31) return null;
+  return out;
+}
+
+/* =================================================================
+   5. ПЕРЕВОДЫ — тон деловой, обращение на «вы»
    ================================================================= */
 const I18N = {
   ru:{
     navInvite:'Пригласить', navVideos:'Видео', navEdit:'Монтаж', navBalance:'Баланс', navProfile:'Профиль',
-    example:'Пример', prevNote:'Здесь появится ваше видео', capTop:'так выглядят', capBottom:'СУБТИТРЫ',
-    styleTitle:'Стиль', colorTitle:'Цвет', subsTitle:'Субтитры', params:'Параметры',
-    fmtTitle:'Формат', audioTitle:'Звук',
-    fVert:'Вертикальное',   fVertSub:'Reels · Shorts · TikTok',
-    fHoriz:'Горизонтальное',fHorizSub:'YouTube · VK',
-    fFeed:'Лента',          fFeedSub:'Instagram лента',
-    fSquare:'Квадрат',      fSquareSub:'Универсальный',
-    aVoice:'Выровнять голос', aNoise:'Убрать шум',
-    aDuck:'Музыка тише под голос', aBoost:'Усилить тихие места',
-    hVoice:'Приводит громкость речи к одному уровню — зритель не крутит ползунок.',
-    hNoise:'Убирает фоновый гул, шум улицы и шипение микрофона.',
-    hDuck:'Музыка автоматически стихает, когда вы говорите, и возвращается в паузах.',
-    hBoost:'Поднимает громкость там, где вы говорили слишком тихо.',
-    musicVol:'Громкость музыки',
-    mQuiet:'Тихо', mNormal:'Средне', mLoud:'Громко',
-    cAmber:'Янтарь', cAzure:'Лазурь', cLime:'Лайм', cCrimson:'Багровый', cPearl:'Жемчуг',
-    sDesign:'Оформление', sSize:'Размер текста', sPosition:'Расположение',
-    oDynamic:'Динамичное', oCalm:'Спокойное', oBold:'Жирное',
-    oMedium:'Средний', oLarge:'Крупный', oSmall:'Мелкий',
-    oAuto:'Авто', oTop:'Сверху', oBottom:'Снизу',
-    pEmoji:'Эмодзи в субтитрах', pSound:'Фоновая музыка', pMedia:'Медиа-карточки',
-    pCards:'Плашки и подписи', pMotion:'Движение камеры', pZoom:'Наезд камеры в начале',
-    pHook:'Подобрать хук к видео',
-    hDesign:'Как ведут себя субтитры: спокойно или с анимацией.',
-    hSize:'Размер текста субтитров на видео.',
-    hPosition:'Где разместить субтитры. «Авто» выбирает лучшее место.',
-    hEmoji:'Добавляет эмодзи к словам в субтитрах.',
-    hSound:'Подбирает трек из библиотеки и подкладывает под видео.',
-    hMedia:'Вставляет изображения по смыслу сказанного.',
-    hCards:'Подписи и плашки поверх видео.',
-    hMotion:'Лёгкое движение кадра, чтобы картинка не была статичной.',
-    hZoom:'Плавный наезд в первые секунды — удерживает внимание.',
-    hHook:'Система предложит цепляющую фразу для начала видео.',
-    hCut:'Убирает паузы и слабые места, оставляя только суть.',
-    videoSec:'Видео', videoReq:'Требования к видео', upTitle:'Пришлите видео боту',
-    reqText:'До 3 минут, вертикальное или горизонтальное, не более 500 МБ.',
-    smartCut:'Умная нарезка',
+    heroKicker:'Монтаж без вопросов', heroTitle:'Пришлите видео — остальное TEZ сделает сам',
+    step1:'Отправьте ролик в чат с ботом', step2:'TEZ уберёт паузы, поставит субтитры, музыку и переходы',
+    step3:'Через минуту — готовое видео', sendBtn:'Отправить видео',
+    noteVip:'⭐ Безлимит — монтаж без списания', noteFree:'🎁 Первое видео — <b>бесплатно</b>',
+    noteBal:'1 монтаж — {n} токена · у вас <b>{b}</b>', noteEmpty:'Нужно {n} токена · <span class="lnk" onclick="go(\'balance\')">пополнить</span>',
+    myStyle:'Ваш стиль', optional:'по желанию',
+    stAuto:'Авто', stAutoD:'TEZ подберёт сам — по умолчанию «Студия»',
+    stStudio:'Студия', stStudioD:'Главное слово крупно, остальные мелко рядом',
+    stType:'Типографика', stTypeD:'Огромное узкое слово, как в журнале',
+    stExpert:'Эксперт', stExpertD:'Жирно, фирменным цветом, курсивные акценты',
+    pvStA:'как сделать', pvStB:'вирусный', pvStC:'ролик',
+    pvTyA:'это приём', pvTyB:'красиво', pvTyC:'как у блогеров',
+    pvExA:'Я', pvExB:'покажу как',
+    accentTitle:'Цвет акцента', acAuto:'Авто',
+    bgTitle:'Фон за вами', bgNone:'Как есть', bgBlur:'Размыть', bgDark:'Тёмный',
+    bgGreen:'Зелёный', bgWarm:'Тёплый',
+    bgHintNone:'Нейросеть может отделить вас от фона: размыть его, как в портретном режиме, или поставить студию.',
+    bgHint:'Нейросеть отделит вас от фона. Монтаж будет дольше примерно на полминуты.',
+    musicTitle:'Музыка', moAuto:'Авто', moEnergetic:'Бодрая', moCalm:'Спокойная', moDramatic:'Напряжённая', moNone:'Без музыки',
+    musicVol:'Громкость музыки', mQuiet:'Тихо', mNormal:'Средне', mLoud:'Громко',
+    fmtTitle:'Формат', fVertSub:'Reels · Shorts · TikTok', fHorizSub:'YouTube · VK', fFeedSub:'Лента', fSquareSub:'Универсальный',
+    whatTitle:'Что делать с видео',
+    tgCaptions:'Субтитры', hgCaptions:'Главное слово крупно, остальные мелко, не на лице',
+    tgHook:'Заголовок в начале', hgHook:'Цепляющая фраза на первые секунды',
+    tgCut:'Убирать паузы', hgCut:'Только суть — без тишины и заминок',
+    tgEffects:'Нарезка и переходы', hgEffects:'Наезды на склейках, «окно», нарезка в бит',
+    tgSfx:'Звуковые эффекты', hgSfx:'«Вжух» на переходах',
+    cleanTitle:'Чистка голоса от шума', clAuto:'Авто', clOn:'Всегда', clOff:'Выкл.',
+    speechTitle:'Язык речи в видео', spAuto:'Авто',
+    saveBtn:'Сохранить стиль', saveNote:'Стиль запомнится для всех следующих видео. Поменять можно в любой момент.',
     promoTitle:'Условия',
-    promo1:'Первое видео — бесплатно. Посмотрите результат, прежде чем оплачивать.',
-    promo2:'На бесплатном видео остаётся водяной знак. После оплаты любого пакета мы пришлём его без знака — токены за это не списываются.',
-    cost:'Стоимость', costVal:'1 монтаж — {n} токена', yourBal:'Ваш баланс', renderBtn:'Смонтировать — {n} токена',
+    promo1:'Первое видео — бесплатно. Посмотрите результат, прежде чем платить.',
+    promo2:'На бесплатном видео — небольшой значок TEZ. В оплаченных его нет.',
+    promo3:'Для лучшего качества отправляйте видео файлом: скрепка → Файл.',
     balTitle:'Баланс', balLabel:'Баланс', tokens:'токенов', enough:'Хватит на', history:'История операций',
-    choosePack:'Выберите пакет', chooseHint:'Выберите один из вариантов',
+    choosePack:'Пакеты и подписка', chooseHint:'Оплата прямо здесь, не выходя из приложения',
     pack1:'Старт', pack2:'Для активных', pack3:'Контент-завод', popular:'ПОПУЛЯРНЫЙ', perRoll:'за видео',
-    payNote:'Оплата картой или Telegram Stars',
+    payNote:'Оплата Telegram Stars — безопасно, прямо в Telegram',
     refTitle:'Приглашайте друзей',
-    refP:'За каждую оплату приглашённого вам возвращается 10% от купленных им токенов — прямо на баланс.',
+    refP:'С каждой покупки приглашённого вам приходит 10% токенами — прямо на баланс. За саму регистрацию токены не начисляются.',
     yourLink:'Ваша ссылка', shareBtn:'Поделиться', copyBtn:'Скопировать',
     invited:'приглашено', earned:'токенов заработано',
-    days7:'За 7 дней', noData:'За этот период нет ни регистраций, ни оплат — здесь появится график.',
+    days7:'За 7 дней', noData:'Пока тихо — поделитесь ссылкой, и здесь появятся приглашённые.',
     partnerH:'Рефералка — токены, партнёрство — деньги',
     partnerP:'Самозанятым и ИП — 15% с каждой оплаты приглашённых, рублями на ваши реквизиты. Люди, которых вы уже пригласили, тоже начнут приносить доход после оформления договора.',
     partnerMore:'Подробнее об условиях', becomePartner:'Стать партнёром',
-    vidTitle:'Мои видео', vidEmpty:'Здесь появятся ваши смонтированные видео', vidStartBtn:'Перейти к монтажу',
-    stReady:'Готово', stWork:'В работе', dReady:'Готово к скачиванию', dWork:'Монтируется',
+    vidTitle:'Мои видео', vidEmpty:'Здесь появятся ваши смонтированные видео. Пришлите ролик боту — он смонтирует и сохранит его сюда.',
+    vidStartBtn:'Отправить видео', vidCount:'Смонтировано видео',
     profTitle:'Профиль', edited:'Смонтировано видео',
     mTopUp:'Пополнить баланс', mSupport:'Поддержка', mPartner:'Партнёрская программа', mChannel:'Официальный канал',
     themeLabel:'Тёмная тема', docs:'Документы', offer:'Публичная оферта', privacy:'Политика конфиденциальности',
     supTitle:'Поддержка', supWrite:'Написать в поддержку', supSub:'Обычно отвечаем за 5–10 минут',
     supBtn:'Открыть чат поддержки', faq:'Частые вопросы',
-    q1:'Как пополнить баланс?', a1:'Раздел «Баланс» → выберите пакет → оплата картой или Stars.',
-    q2:'Сколько занимает монтаж?', a2:'В среднем 30–90 секунд в зависимости от длины видео.',
-    q3:'Списались токены, а видео нет', a3:'Напишите в поддержку — вернём токены или выполним монтаж заново.',
+    q0:'Как смонтировать видео?', a0:'Просто пришлите видео боту в чат. Остальное TEZ сделает сам.',
+    q1:'Как пополнить баланс?', a1:'Раздел «Баланс» → пакет или годовая подписка → оплата Telegram Stars.',
+    q2:'Сколько занимает монтаж?', a2:'Около минуты на минуту видео.',
+    q3:'Списались токены, а видео нет', a3:'Если монтаж не удался, токены возвращаются сами. Если нет — напишите нам.',
     vipShort:'Безлимит', vipNote:'Вы в списке своих — монтаж без списания',
     langLabel:'Язык', soon:'Скоро будет доступно',
-    tCopied:'Ссылка скопирована', tCopyFail:'Не вышло скопировать — выделите ссылку вручную', tNoGems:'Недостаточно токенов — пополните баланс',
-    tFile:'Закройте приложение и пришлите видео боту в чат', tRun:'Запускаю монтаж…', tOpenBot:'Откройте бота и нажмите кнопку запуска',
-    tPay:'Открываем оплату', tLang:'Язык изменён'
+    tCopied:'Ссылка скопирована', tCopyFail:'Не вышло скопировать — выделите ссылку вручную',
+    tFile:'Закрываю приложение — пришлите видео в чат', tSaved:'Сохраняю стиль…',
+    tPay:'Открываем оплату', tPaid:'Оплачено! Токены уже на балансе', tPayFail:'Оплата не прошла',
+    tLang:'Язык изменён',
+    packP3:'Знакомство',
+    packP5:'Лайт',
+    subTitle:'Безлимит на год',
+    subDesc:'Монтаж без токенов 365 дней · до {k} видео в сутки',
+    subBadge:'ВЫГОДНО АКТИВНЫМ',
+    perMonth:'в месяц',
+    subOn:'💎 Подписка до <b>{d}</b> — монтаж без токенов',
+    noteSub:'💎 Подписка до <b>{d}</b> — монтаж без токенов',
+    offerNote:'Оплачивая, вы принимаете условия',
+    offerLink:'публичной оферты',
+    r7l:'пришли по ссылке',
+    e7l:'токенов заработано',
+    refRulesT:'Как это работает',
+    refRule1:'Друг впервые открывает бота по вашей ссылке.',
+    refRule2:'С каждой его покупки вам приходит 10% токенами — навсегда.',
+    refRule3:'За регистрацию и бесплатное видео друга токены не начисляются — только за покупки.',
+    vidHint:'Нажмите на видео — бот пришлёт его в чат.',
+    vidOpen:'Открыть',
+    vidName:'Видео',
+    partnerMsg:'Здравствуйте! Хочу стать партнёром TEZ.',
+    docRuNote:'Документ составлен на русском языке.'
   },
 
   tg:{
     navInvite:'Даъват', navVideos:'Видео', navEdit:'Монтаж', navBalance:'Баланс', navProfile:'Профил',
-    example:'Намуна', prevNote:'Дар ин ҷо видеои шумо пайдо мешавад', capTop:'зерунвон чунин аст', capBottom:'ЗЕРУНВОН',
-    styleTitle:'Услуб', colorTitle:'Ранг', subsTitle:'Зерунвон', params:'Танзимот',
-    fmtTitle:'Формат', audioTitle:'Садо',
-    fVert:'Амудӣ',   fVertSub:'Reels · Shorts · TikTok',
-    fHoriz:'Уфуқӣ',  fHorizSub:'YouTube · VK',
-    fFeed:'Лента',   fFeedSub:'Лентаи Instagram',
-    fSquare:'Мураббаъ', fSquareSub:'Универсалӣ',
-    aVoice:'Ҳамвор кардани овоз', aNoise:'Нест кардани садои беруна',
-    aDuck:'Мусиқӣ ҳангоми гуфтор оромтар', aBoost:'Баланд кардани ҷойҳои паст',
-    hVoice:'Баландии садои нутқро ба як сатҳ меорад — бинанда танзим намекунад.',
-    hNoise:'Ғалоғулаи замина, садои кӯча ва хишир-хишири микрофонро нест мекунад.',
-    hDuck:'Ҳангоми сухани шумо мусиқӣ худкор паст мешавад ва дар таваққуф бармегардад.',
-    hBoost:'Дар ҷойҳое, ки хеле оҳиста гап задаед, садоро баланд мекунад.',
-    musicVol:'Баландии мусиқӣ',
-    mQuiet:'Паст', mNormal:'Миёна', mLoud:'Баланд',
-    cAmber:'Каҳрабо', cAzure:'Нилобӣ', cLime:'Лиму', cCrimson:'Арғувон', cPearl:'Марворид',
-    sDesign:'Тарҳ', sSize:'Андозаи матн', sPosition:'Ҷойгиршавӣ',
-    oDynamic:'Ҷунбанда', oCalm:'Ором', oBold:'Ғафс',
-    oMedium:'Миёна', oLarge:'Калон', oSmall:'Хурд',
-    oAuto:'Худкор', oTop:'Боло', oBottom:'Поён',
-    pEmoji:'Эмодзи дар зерунвон', pSound:'Мусиқии заминавӣ', pMedia:'Кортҳои медиа',
-    pCards:'Лавҳаҳо ва навиштаҷот', pMotion:'Ҳаракати камера', pZoom:'Наздикшавии камера дар аввал',
-    pHook:'Интихоби ҳук барои видео',
-    hDesign:'Зерунвонҳо чӣ гуна рафтор мекунанд: ором ё бо аниматсия.',
-    hSize:'Андозаи матни зерунвон дар видео.',
-    hPosition:'Зерунвонҳо дар куҷо ҷойгир шаванд. «Худкор» беҳтаринро интихоб мекунад.',
-    hEmoji:'Ба калимаҳои зерунвон эмодзи илова мекунад.',
-    hSound:'Аз китобхона оҳанг интихоб карда, зери видео мегузорад.',
-    hMedia:'Мувофиқи гуфтор тасвирҳо мегузорад.',
-    hCards:'Навиштаҷот ва лавҳаҳо дар болои видео.',
-    hMotion:'Ҳаракати сабуки кадр, то тасвир статикӣ набошад.',
-    hZoom:'Наздикшавии нарм дар сонияҳои аввал — диққатро нигоҳ медорад.',
-    hHook:'Система барои оғози видео ибораи ҷолиб пешниҳод мекунад.',
-    hCut:'Таваққуфҳо ва ҷойҳои сустро мебарорад, танҳо муҳимаш мемонад.',
-    videoSec:'Видео', videoReq:'Талабот ба видео', upTitle:'Видеоро ба бот фиристед',
-    reqText:'То 3 дақиқа, амудӣ ё уфуқӣ, на бештар аз 500 МБ.',
-    smartCut:'Буриши оқилона',
+    heroKicker:'Монтаж бе савол', heroTitle:'Видеоро фиристед — боқиашро TEZ худаш мекунад',
+    step1:'Видеоро ба чат бо бот фиристед', step2:'TEZ таваққуфҳоро мебурад, зерунвон, мусиқӣ ва гузаришҳо мегузорад',
+    step3:'Пас аз як дақиқа — видеои тайёр', sendBtn:'Фиристодани видео',
+    noteVip:'⭐ Бемаҳдуд — монтаж бе пардохт', noteFree:'🎁 Видеои аввал — <b>ройгон</b>',
+    noteBal:'1 монтаж — {n} токен · шумо <b>{b}</b> доред', noteEmpty:'{n} токен лозим · <span class="lnk" onclick="go(\'balance\')">пур кардан</span>',
+    myStyle:'Услуби шумо', optional:'ихтиёрӣ',
+    stAuto:'Худкор', stAutoD:'TEZ худаш интихоб мекунад — «Студия»',
+    stStudio:'Студия', stStudioD:'Калимаи асосӣ калон, боқӣ хурд дар паҳлӯ',
+    stType:'Типография', stTypeD:'Калимаи бузурги борик, мисли маҷалла',
+    stExpert:'Эксперт', stExpertD:'Ғафс, бо ранги бренд ва таъкиди курсивӣ',
+    pvStA:'чӣ тавр', pvStB:'вирусӣ', pvStC:'видео',
+    pvTyA:'ин усул', pvTyB:'зебо', pvTyC:'мисли блогерҳо',
+    pvExA:'Ман', pvExB:'нишон медиҳам',
+    accentTitle:'Ранги таъкид', acAuto:'Худкор',
+    bgTitle:'Замина дар паси шумо', bgNone:'Ҳамон тавр', bgBlur:'Хира', bgDark:'Торик',
+    bgGreen:'Сабз', bgWarm:'Гарм',
+    bgHintNone:'Нейросеть метавонад шуморо аз замина ҷудо кунад: заминаро хира кунад ё студия гузорад.',
+    bgHint:'Нейросеть шуморо аз замина ҷудо мекунад. Монтаж тақрибан ним дақиқа дарозтар мешавад.',
+    musicTitle:'Мусиқӣ', moAuto:'Худкор', moEnergetic:'Пурҷӯш', moCalm:'Ором', moDramatic:'Шиддатнок', moNone:'Бе мусиқӣ',
+    musicVol:'Баландии мусиқӣ', mQuiet:'Паст', mNormal:'Миёна', mLoud:'Баланд',
+    fmtTitle:'Формат', fVertSub:'Reels · Shorts · TikTok', fHorizSub:'YouTube · VK', fFeedSub:'Лента', fSquareSub:'Универсалӣ',
+    whatTitle:'Бо видео чӣ кор кунем',
+    tgCaptions:'Зерунвон', hgCaptions:'Калимаи асосӣ калон, боқӣ хурд, на дар рӯй',
+    tgHook:'Сарлавҳа дар аввал', hgHook:'Ибораи ҷолиб барои сонияҳои аввал',
+    tgCut:'Буридани таваққуфҳо', hgCut:'Танҳо асл — бе хомӯшӣ ва дудилагӣ',
+    tgEffects:'Буриш ва гузаришҳо', hgEffects:'Наздикшавӣ дар буриш, «тиреза», буриш бо ритм',
+    tgSfx:'Эффектҳои садо', hgSfx:'«Вжух» дар гузаришҳо',
+    cleanTitle:'Тоза кардани овоз аз садои беруна', clAuto:'Худкор', clOn:'Ҳамеша', clOff:'Хомӯш',
+    speechTitle:'Забони нутқ дар видео', spAuto:'Худкор',
+    saveBtn:'Нигоҳ доштани услуб', saveNote:'Услуб барои ҳамаи видеоҳои навбатӣ нигоҳ дошта мешавад. Ҳар вақт иваз кардан мумкин аст.',
     promoTitle:'Шартҳо',
     promo1:'Видеои аввал — ройгон. Пеш аз пардохт натиҷаро бубинед.',
-    promo2:'Дар видеои ройгон тамғаи обӣ мемонад. Пас аз хариди ҳар баста онро бе тамға мефиристем — барои ин токен гирифта намешавад.',
-    cost:'Нарх', costVal:'1 монтаж — {n} токен', yourBal:'Баланси шумо', renderBtn:'Монтаж кардан — {n} токен',
+    promo2:'Дар видеои ройгон — нишони хурди TEZ. Дар видеоҳои пулакӣ нест.',
+    promo3:'Барои сифати беҳтар видеоро ҳамчун файл фиристед: гиреҳ → Файл.',
     balTitle:'Баланс', balLabel:'Баланс', tokens:'токен', enough:'Барои', history:'Таърихи амалиётҳо',
-    choosePack:'Бастаро интихоб кунед', chooseHint:'Яке аз вариантҳоро интихоб кунед',
+    choosePack:'Бастаҳо ва обуна', chooseHint:'Пардохт дар ҳамин ҷо, бе баромадан аз барнома',
     pack1:'Оғоз', pack2:'Барои фаъолон', pack3:'Корхонаи контент', popular:'МАШҲУР', perRoll:'барои як видео',
-    payNote:'Пардохт бо корт ё Telegram Stars',
+    payNote:'Пардохт бо Telegram Stars — бехатар, дар дохили Telegram',
     refTitle:'Дӯстонро даъват кунед',
-    refP:'Аз ҳар пардохти даъватшуда 10% токенҳои харидаи ӯ ба баланси шумо бармегардад.',
+    refP:'Аз ҳар хариди даъватшуда ба шумо 10% токен меояд — рост ба баланс. Барои худи сабти ном токен дода намешавад.',
     yourLink:'Пайванди шумо', shareBtn:'Фиристодан', copyBtn:'Нусхабардорӣ',
     invited:'даъват шуд', earned:'токен даромад',
-    days7:'Дар 7 рӯз', noData:'Дар ин давра на сабти ном ҳаст, на пардохт — дар ин ҷо график пайдо мешавад.',
+    days7:'Дар 7 рӯз', noData:'Ҳоло холӣ — пайвандро фиристед, ва даъватшудагон дар ин ҷо пайдо мешаванд.',
     partnerH:'Реферал — токен, шарикӣ — пул',
     partnerP:'Ба худишғолон ва соҳибкорон — 15% аз ҳар пардохти даъватшудагон, бо рубл ба ҳисоби шумо. Онҳое, ки аллакай даъват кардаед, пас аз бастани шартнома низ даромад меоранд.',
     partnerMore:'Муфассал дар бораи шартҳо', becomePartner:'Шарик шудан',
-    vidTitle:'Видеоҳои ман', vidEmpty:'Дар ин ҷо видеоҳои монтажшудаи шумо пайдо мешаванд', vidStartBtn:'Ба монтаж гузаштан',
-    stReady:'Тайёр', stWork:'Дар кор', dReady:'Барои боргирӣ тайёр', dWork:'Дар ҳоли монтаж',
+    vidTitle:'Видеоҳои ман', vidEmpty:'Дар ин ҷо видеоҳои монтажшудаи шумо пайдо мешаванд. Видеоро ба бот фиристед — вай монтаж карда, дар ин ҷо нигоҳ медорад.',
+    vidStartBtn:'Фиристодани видео', vidCount:'Видеоҳои монтажшуда',
     profTitle:'Профил', edited:'Видеоҳои монтажшуда',
     mTopUp:'Пур кардани баланс', mSupport:'Дастгирӣ', mPartner:'Барномаи шарикӣ', mChannel:'Канали расмӣ',
     themeLabel:'Мавзӯи торик', docs:'Ҳуҷҷатҳо', offer:'Оферти оммавӣ', privacy:'Сиёсати махфият',
     supTitle:'Дастгирӣ', supWrite:'Ба дастгирӣ нависед', supSub:'Одатан дар 5–10 дақиқа ҷавоб медиҳем',
     supBtn:'Кушодани чати дастгирӣ', faq:'Саволҳои маъмул',
-    q1:'Чӣ тавр балансро пур кунам?', a1:'Бахши «Баланс» → бастаро интихоб кунед → пардохт бо корт ё Stars.',
-    q2:'Монтаж чанд вақт мегирад?', a2:'Ба ҳисоби миёна 30–90 сония, вобаста ба дарозии видео.',
-    q3:'Токенҳо кам шуданд, вале видео нест', a3:'Ба дастгирӣ нависед — токенҳоро бармегардонем ё монтажро аз нав мекунем.',
+    q0:'Видеоро чӣ тавр монтаж кунам?', a0:'Танҳо видеоро ба бот дар чат фиристед. Боқиашро TEZ худаш мекунад.',
+    q1:'Чӣ тавр балансро пур кунам?', a1:'Бахши «Баланс» → баста ё обунаи солона → пардохт бо Telegram Stars.',
+    q2:'Монтаж чанд вақт мегирад?', a2:'Тақрибан як дақиқа барои як дақиқа видео.',
+    q3:'Токенҳо кам шуданд, вале видео нест', a3:'Агар монтаж нашавад, токенҳо худ ба худ бармегарданд. Агар не — ба мо нависед.',
     vipShort:'Бемаҳдуд', vipNote:'Шумо дар рӯйхати худиҳо — монтаж бе пардохт',
     langLabel:'Забон', soon:'Ба зудӣ дастрас мешавад',
-    tCopied:'Пайванд нусхабардорӣ шуд', tCopyFail:'Нусхабардорӣ нашуд — пайвандро дастӣ интихоб кунед', tNoGems:'Токен нокифоя — балансро пур кунед',
-    tFile:'Барномаро пӯшед ва видеоро ба бот дар чат фиристед', tRun:'Монтажро оғоз мекунам…', tOpenBot:'Ботро кушоед ва тугмаи оғозро пахш кунед',
-    tPay:'Пардохтро мекушоем', tLang:'Забон иваз шуд'
+    tCopied:'Пайванд нусхабардорӣ шуд', tCopyFail:'Нусхабардорӣ нашуд — пайвандро дастӣ интихоб кунед',
+    tFile:'Барномаро мепӯшам — видеоро ба чат фиристед', tSaved:'Услубро нигоҳ медорам…',
+    tPay:'Пардохтро мекушоем', tPaid:'Пардохт шуд! Токенҳо аллакай дар баланс', tPayFail:'Пардохт нашуд',
+    tLang:'Забон иваз шуд',
+    packP3:'Шиносоӣ',
+    packP5:'Лайт',
+    subTitle:'Бемаҳдуд барои як сол',
+    subDesc:'Монтаж бе токен 365 рӯз · то {k} видео дар як шабонарӯз',
+    subBadge:'БАРОИ ФАЪОЛОН',
+    perMonth:'дар як моҳ',
+    subOn:'💎 Обуна то <b>{d}</b> — монтаж бе токен',
+    noteSub:'💎 Обуна то <b>{d}</b> — монтаж бе токен',
+    offerNote:'Бо пардохт шумо қабул мекунед:',
+    offerLink:'шартҳои офертаи оммавӣ',
+    r7l:'бо пайванд омаданд',
+    e7l:'токен даромад',
+    refRulesT:'Чӣ тавр кор мекунад',
+    refRule1:'Дӯстатон ботро бори аввал бо пайванди шумо мекушояд.',
+    refRule2:'Аз ҳар хариди ӯ ба шумо 10% токен меояд — то абад.',
+    refRule3:'Барои сабти ном ва видеои ройгони дӯст токен дода намешавад — танҳо барои харидҳо.',
+    vidHint:'Ба видео пахш кунед — бот онро ба чат мефиристад.',
+    vidOpen:'Кушодан',
+    vidName:'Видео',
+    partnerMsg:'Салом! Мехоҳам шарики TEZ шавам.',
+    docRuNote:'Ҳуҷҷат бо забони русӣ тартиб дода шудааст; версияи русӣ эътибори ҳуқуқӣ дорад.'
   },
 
   en:{
     navInvite:'Invite', navVideos:'Videos', navEdit:'Edit', navBalance:'Balance', navProfile:'Profile',
-    example:'Example', prevNote:'Your video will appear here', capTop:'this is how', capBottom:'SUBTITLES LOOK',
-    styleTitle:'Style', colorTitle:'Color', subsTitle:'Subtitles', params:'Options',
-    fmtTitle:'Format', audioTitle:'Audio',
-    fVert:'Vertical',   fVertSub:'Reels · Shorts · TikTok',
-    fHoriz:'Horizontal',fHorizSub:'YouTube · VK',
-    fFeed:'Feed',       fFeedSub:'Instagram feed',
-    fSquare:'Square',   fSquareSub:'Universal',
-    aVoice:'Level the voice', aNoise:'Remove noise',
-    aDuck:'Duck music under voice', aBoost:'Boost quiet parts',
-    hVoice:'Brings speech to an even volume so viewers never touch the slider.',
-    hNoise:'Removes background hum, street noise and microphone hiss.',
-    hDuck:'Music fades automatically while you speak and returns in the pauses.',
-    hBoost:'Raises the volume where you spoke too quietly.',
-    musicVol:'Music volume',
-    mQuiet:'Quiet', mNormal:'Normal', mLoud:'Loud',
-    cAmber:'Amber', cAzure:'Azure', cLime:'Lime', cCrimson:'Crimson', cPearl:'Pearl',
-    sDesign:'Design', sSize:'Text size', sPosition:'Position',
-    oDynamic:'Dynamic', oCalm:'Calm', oBold:'Bold',
-    oMedium:'Medium', oLarge:'Large', oSmall:'Small',
-    oAuto:'Auto', oTop:'Top', oBottom:'Bottom',
-    pEmoji:'Emoji in subtitles', pSound:'Background music', pMedia:'Media cards',
-    pCards:'Labels and captions', pMotion:'Camera motion', pZoom:'Zoom-in at the start',
-    pHook:'Suggest a hook for the video',
-    hDesign:'How subtitles behave: calm or animated.',
-    hSize:'Size of the subtitle text on the video.',
-    hPosition:'Where to place subtitles. "Auto" picks the best spot.',
-    hEmoji:'Adds emoji to words in the subtitles.',
-    hSound:'Picks a track from the library and lays it under the video.',
-    hMedia:'Inserts images matching what is being said.',
-    hCards:'Captions and labels over the video.',
-    hMotion:'Subtle frame movement so the shot is not static.',
-    hZoom:'Smooth zoom in the first seconds — holds attention.',
-    hHook:'The system suggests a catchy opening line for your video.',
-    hCut:'Removes pauses and weak parts, keeping only the essentials.',
-    videoSec:'Video', videoReq:'Video requirements', upTitle:'Send your video to the bot',
-    reqText:'Up to 3 minutes, vertical or horizontal, max 500 MB.',
-    smartCut:'Smart trimming',
+    heroKicker:'Editing without questions', heroTitle:'Send a video — TEZ does the rest',
+    step1:'Send your clip to the bot chat', step2:'TEZ cuts pauses, adds captions, music and transitions',
+    step3:'A minute later — a finished video', sendBtn:'Send a video',
+    noteVip:'⭐ Unlimited — no tokens charged', noteFree:'🎁 Your first video is <b>free</b>',
+    noteBal:'1 edit — {n} tokens · you have <b>{b}</b>', noteEmpty:'{n} tokens needed · <span class="lnk" onclick="go(\'balance\')">top up</span>',
+    myStyle:'Your style', optional:'optional',
+    stAuto:'Auto', stAutoD:'TEZ picks for you — Studio by default',
+    stStudio:'Studio', stStudioD:'Key word big, the rest small beside it',
+    stType:'Type', stTypeD:'Huge narrow word, magazine-style',
+    stExpert:'Expert', stExpertD:'Bold, brand color, italic accents',
+    pvStA:'how to make', pvStB:'viral', pvStC:'videos',
+    pvTyA:'this trick', pvTyB:'stunning', pvTyC:'like top creators',
+    pvExA:'I', pvExB:'will show you',
+    accentTitle:'Accent color', acAuto:'Auto',
+    bgTitle:'Your background', bgNone:'As is', bgBlur:'Blur', bgDark:'Dark',
+    bgGreen:'Green', bgWarm:'Warm',
+    bgHintNone:'AI can separate you from the background: blur it like portrait mode or put you in a studio.',
+    bgHint:'AI will separate you from the background. Editing takes about half a minute longer.',
+    musicTitle:'Music', moAuto:'Auto', moEnergetic:'Energetic', moCalm:'Calm', moDramatic:'Dramatic', moNone:'No music',
+    musicVol:'Music volume', mQuiet:'Quiet', mNormal:'Normal', mLoud:'Loud',
+    fmtTitle:'Format', fVertSub:'Reels · Shorts · TikTok', fHorizSub:'YouTube · VK', fFeedSub:'Feed', fSquareSub:'Universal',
+    whatTitle:'What to do with the video',
+    tgCaptions:'Captions', hgCaptions:'Key word big, the rest small, never on the face',
+    tgHook:'Opening title', hgHook:'A catchy line for the first seconds',
+    tgCut:'Remove pauses', hgCut:'Only the essence — no silence or stumbles',
+    tgEffects:'Cuts and transitions', hgEffects:'Punch-in cuts, picture window, beat sync',
+    tgSfx:'Sound effects', hgSfx:'Whooshes on transitions',
+    cleanTitle:'Voice noise removal', clAuto:'Auto', clOn:'Always', clOff:'Off',
+    speechTitle:'Spoken language', spAuto:'Auto',
+    saveBtn:'Save style', saveNote:'Your style is applied to all next videos. Change it any time.',
     promoTitle:'Terms',
     promo1:'Your first video is free. See the result before you pay.',
-    promo2:'The free video keeps a watermark. After buying any package we send it again without the watermark — no tokens charged.',
-    cost:'Price', costVal:'1 edit — {n} tokens', yourBal:'Your balance', renderBtn:'Start editing — {n} tokens',
+    promo2:'The free video has a small TEZ badge. Paid videos don’t.',
+    promo3:'For the best quality send the video as a file: paperclip → File.',
     balTitle:'Balance', balLabel:'Balance', tokens:'tokens', enough:'Enough for', history:'Transaction history',
-    choosePack:'Choose a package', chooseHint:'Pick one of the options',
+    choosePack:'Packages and subscription', chooseHint:'Pay right here, without leaving the app',
     pack1:'Starter', pack2:'For active creators', pack3:'Content factory', popular:'POPULAR', perRoll:'per video',
-    payNote:'Pay by card or Telegram Stars',
+    payNote:'Telegram Stars — secure payment right inside Telegram',
     refTitle:'Invite your friends',
-    refP:'You get 10% of the tokens your invitees buy — straight to your balance.',
+    refP:'You get 10% of every purchase your invitees make, in tokens, straight to your balance. Sign-ups alone earn nothing.',
     yourLink:'Your link', shareBtn:'Share', copyBtn:'Copy',
     invited:'invited', earned:'tokens earned',
-    days7:'Last 7 days', noData:'No sign-ups or payments in this period — a chart will appear here.',
+    days7:'Last 7 days', noData:'Quiet so far — share your link and invitees will show up here.',
     partnerH:'Referrals pay tokens, partnership pays money',
     partnerP:'For self-employed and sole traders — 15% of every payment from your invitees, paid in cash to your account. People you already invited start earning you money once the contract is signed.',
     partnerMore:'Read the full terms', becomePartner:'Become a partner',
-    vidTitle:'My videos', vidEmpty:'Your edited videos will appear here', vidStartBtn:'Go to editing',
-    stReady:'Ready', stWork:'Processing', dReady:'Ready to download', dWork:'Editing',
+    vidTitle:'My videos', vidEmpty:'Your edited videos will appear here. Send a clip to the bot — it will edit it and save it here.',
+    vidStartBtn:'Send a video', vidCount:'Videos edited',
     profTitle:'Profile', edited:'Videos edited',
     mTopUp:'Top up balance', mSupport:'Support', mPartner:'Referral program', mChannel:'Official channel',
     themeLabel:'Dark theme', docs:'Documents', offer:'Public offer', privacy:'Privacy policy',
     supTitle:'Support', supWrite:'Contact support', supSub:'We usually reply in 5–10 minutes',
     supBtn:'Open support chat', faq:'FAQ',
-    q1:'How do I top up my balance?', a1:'Go to "Balance" → pick a package → pay by card or Stars.',
-    q2:'How long does editing take?', a2:'Usually 30–90 seconds, depending on video length.',
-    q3:'Tokens charged but no video', a3:'Contact support — we will refund the tokens or re-run the edit.',
+    q0:'How do I edit a video?', a0:'Just send the video to the bot. TEZ does the rest.',
+    q1:'How do I top up my balance?', a1:'Go to “Balance” → pick a package or the yearly subscription → pay with Telegram Stars.',
+    q2:'How long does editing take?', a2:'About a minute per minute of video.',
+    q3:'Tokens charged but no video', a3:'If an edit fails, tokens come back automatically. If not — contact us.',
     vipShort:'Unlimited', vipNote:'You are on the free list — no tokens charged',
     langLabel:'Language', soon:'Coming soon',
-    tCopied:'Link copied', tCopyFail:'Copy failed — select the link manually', tNoGems:'Not enough tokens — top up your balance',
-    tFile:'Close the app and send your video to the bot in chat', tRun:'Starting the edit…', tOpenBot:'Open the bot and press the start button',
-    tPay:'Opening payment', tLang:'Language changed'
+    tCopied:'Link copied', tCopyFail:'Copy failed — select the link manually',
+    tFile:'Closing the app — send your video in the chat', tSaved:'Saving your style…',
+    tPay:'Opening payment', tPaid:'Paid! Tokens are on your balance', tPayFail:'Payment failed',
+    tLang:'Language changed',
+    packP3:'Intro',
+    packP5:'Lite',
+    subTitle:'Unlimited for a year',
+    subDesc:'Edits without tokens for 365 days · up to {k} videos a day',
+    subBadge:'BEST FOR CREATORS',
+    perMonth:'per month',
+    subOn:'💎 Subscription until <b>{d}</b> — edits without tokens',
+    noteSub:'💎 Subscription until <b>{d}</b> — edits without tokens',
+    offerNote:'By paying you accept the',
+    offerLink:'public offer',
+    r7l:'joined via link',
+    e7l:'tokens earned',
+    refRulesT:'How it works',
+    refRule1:'A friend opens the bot via your link for the first time.',
+    refRule2:'You get 10% of every purchase they make, in tokens — forever.',
+    refRule3:'No tokens for sign-ups or the friend’s free video — only for purchases.',
+    vidHint:'Tap a video — the bot will send it to the chat.',
+    vidOpen:'Open',
+    vidName:'Video',
+    partnerMsg:'Hello! I would like to become a TEZ partner.',
+    docRuNote:'This document is written in Russian; the Russian version is legally binding.'
   }
 };
-
-// Порядок важен: по нему язык кодируется в ссылку для бота.
-// Тот же порядок лежит в LANG_LIST в bot.py — менять только вместе.
-const LANGS = ['ru', 'tg', 'en'];
 
 let lang = 'ru';
 function t(key){
@@ -1033,7 +1211,7 @@ function t(key){
 }
 
 /* =================================================================
-   5. ТЕМА
+   6. ТЕМА
    ================================================================= */
 let theme = 'light';
 function applyTheme(name, save){
@@ -1052,10 +1230,11 @@ function detectTheme(){
 }
 
 /* =================================================================
-   6. Telegram WebApp
+   7. Telegram WebApp
    ================================================================= */
 const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-let state = { balance:0, refCount:0, refEarn:0, renders:0, videos:[] };
+let state = { balance:0, refCount:0, refEarn:0, renders:0, ts:0,
+              sub:0, videos:[], vc:0, r7:0, e7:0 };
 
 function haptic(type){ try{ tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred(type||'light'); }catch(e){} }
 
@@ -1092,12 +1271,15 @@ function brandMarkSVG(){
 function initStaticIcons(){
   document.getElementById('brandMark').innerHTML = brandMarkSVG();
   document.getElementById('chipIc').innerHTML   = icon('coins', 16);
-  document.getElementById('prevIc').innerHTML   = icon('play', 40);
-  document.getElementById('plusIc').innerHTML   = icon('plus', 22);
-  document.getElementById('cutIc').innerHTML    = icon('scissors', 18);
+  document.getElementById('sendIc').innerHTML   = icon('send', 20);
   document.getElementById('giftIc').innerHTML   = icon('gift', 17);
   document.getElementById('infoIc').innerHTML   = icon('info', 17);
+  document.getElementById('hdIc').innerHTML     = icon('hd', 17);
   document.getElementById('emptyIc').innerHTML  = icon('film', 44);
+  document.getElementById('offerIc').innerHTML  = icon('info', 17);
+  document.getElementById('privIc').innerHTML   = icon('user', 17);
+  document.getElementById('docBack').innerHTML  = icon('back', 18);
+  document.getElementById('vidIc').innerHTML    = icon('film', 22);
   document.getElementById('renderIc').innerHTML = icon('film', 19);
   document.getElementById('supIc').innerHTML    = icon('chat', 20);
   document.getElementById('backIc').innerHTML   = icon('back', 18);
@@ -1117,62 +1299,106 @@ function initTelegram(){
       document.getElementById('profName').textContent = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Гость';
       document.getElementById('profUser').textContent = u.username ? '@'+u.username : '—';
     }
-    tg.BackButton.onClick(()=>go('editor'));
+    // «Назад» Telegram: из документа — туда, откуда его открыли
+    tg.BackButton.onClick(()=>{
+      const cur = document.querySelector('.screen.active');
+      if(cur && cur.id === 'doc') closeDoc(); else go('editor');
+    });
   }
   initStaticIcons();
   applyTheme(detectTheme(), false);
   applyLang(detectLang(), false);
+  // ссылка вида …/#offer или …/#privacy открывает документ сразу:
+  // так бот показывает оферту и политику, и так её видит @BotFather
+  const doc = (location.hash || '').replace('#', '');
+  if(DOCS[doc]) openDoc(doc);
 }
 
-/* Настоящие данные бот передаёт прямо в адресе: ?bal=24&rnd=0&inv=0&earn=0
+/* Настоящие данные бот передаёт прямо в адресе: ?bal=24&rnd=0&ts=...
    Своего сервера с https у нас пока нет, поэтому приложение не может
    спросить базу само. Цифры здесь только для показа — списание всё равно
-   проверяет бот, и подменённое значение ему ничего не даст. */
+   проверяет бот, и подменённое значение ему ничего не даст.
+
+   ВАЖНО: в приложение ведут две двери — синяя кнопка слева и кнопка
+   в нижней клавиатуре. Telegram запоминает адрес каждой кнопки в момент,
+   когда бот её прислал, поэтому одна из них может везти вчерашние цифры.
+   Каждый адрес несёт время ts: приложение запоминает самые свежие данные
+   и, если его открыли старой кнопкой, показывает свежие. */
 let isDemo = true;
 let isVip = false;              // свой человек: монтаж без списания
+let freeAvailable = false;      // первое видео ещё бесплатно
 let links = { support:'', channel:'' };
 let botName = '';
+let invoices = {};              // пакет -> ссылка на оплату внутри Telegram
+let userId = '';
+
+function storeGet(key){ try{ return JSON.parse(localStorage.getItem(key) || 'null'); }catch(e){ return null; } }
+function storeSet(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
 
 function loadData(){
   const q = new URLSearchParams(location.search);
   links.support = q.get('sup') || '';
   links.channel = q.get('ch')  || '';
   botName       = q.get('bot') || '';
+  payWith       = q.get('pay') || 'stars';
+  userId        = q.get('uid') || '';
 
-  // Реферальную ссылку собираем здесь, а не в блоке Telegram:
-  // id приходит в адресе, и ссылка получается даже если данные
-  // пользователя недоступны. Иначе оставался бы несуществующий YourBot.
-  const myId = q.get('uid');
-  if(botName && myId){
+  (q.get('iv') || '').split(',').forEach(pair=>{
+    const i = pair.indexOf(':');
+    if(i > 0) invoices[pair.slice(0, i)] = pair.slice(i + 1);
+  });
+
+  // Реферальную ссылку собираем здесь: id приходит в адресе,
+  // и ссылка получается, даже если данные пользователя недоступны.
+  if(botName && userId){
     document.getElementById('refLink').textContent =
-      `https://t.me/${botName}?start=ref_${myId}`;
+      `https://t.me/${botName}?start=ref_${userId}`;
   }
   const num = (k, def) => {
     const v = parseInt(q.get(k), 10);
     return Number.isFinite(v) && v >= 0 ? v : def;
   };
 
-  isVip = q.get('vip') === '1';
-
-  if(q.has('bal')){
-    isDemo = false;
-    state.balance  = num('bal', 0);
-    state.renders  = num('rnd', 0);
-    state.refCount = num('inv', 0);
-    state.refEarn  = num('earn', 0);
-    state.videos   = [];          // список роликов появится вместе с монтажом
-  }else{
+  if(!q.has('bal')){
     // приложение открыли не из бота — показываем пример
-    state.balance = 240; state.refCount = 4; state.refEarn = 96; state.renders = 3;
-    state.videos = [
-      {name:'promo_01.mp4', status:'ok'},
-      {name:'intro_02.mp4', status:'wait'},
-    ];
+    state = { balance:240, refCount:4, refEarn:96, renders:3, ts:0, sub:0, vc:2, r7:1, e7:24,
+              videos:[{id:2, at:Date.now()/1000 - 3600, dur:15, style:2},
+                      {id:1, at:Date.now()/1000 - 90000, dur:38, style:1}] };
+    return;
   }
+  isDemo = false;
+  let fresh = {
+    ts: num('ts', 0), balance: num('bal', 0), renders: num('rnd', 0),
+    refCount: num('inv', 0), refEarn: num('earn', 0),
+    vip: q.get('vip') === '1', free: q.get('fr') === '1', p: q.get('p') || '',
+    sub: num('sub', 0), vc: num('vc', 0), r7: num('r7', 0), e7: num('e7', 0),
+    // готовые ролики: номер.время.секунды.стиль через запятую
+    videos: (q.get('vl') || '').split(',').filter(Boolean).map(x => {
+      const [id, at, dur, style] = x.split('.').map(Number);
+      return {id, at, dur, style};
+    }).filter(v => Number.isFinite(v.id)),
+  };
+  // открыли старой кнопкой — у нас уже есть данные новее
+  const key = 'tez_state_' + userId;
+  const saved = storeGet(key);
+  if(saved && saved.ts > fresh.ts) fresh = Object.assign({videos:[], sub:0, vc:0, r7:0, e7:0}, saved);
+  else storeSet(key, fresh);
+
+  state = { balance:fresh.balance, renders:fresh.renders, refCount:fresh.refCount,
+            refEarn:fresh.refEarn, ts:fresh.ts, sub:fresh.sub || 0,
+            videos:fresh.videos || [], vc:fresh.vc || 0, r7:fresh.r7 || 0, e7:fresh.e7 || 0 };
+  isVip = !!fresh.vip;
+  freeAvailable = !!fresh.free;
+
+  // стиль: тот, что знает бот, — или сохранённый здесь позже
+  const local = storeGet('tez_prefs_' + userId);
+  const code = (local && local.at > fresh.ts) ? local.code : fresh.p;
+  const decoded = decodePrefs(code);
+  if(decoded) prefs = Object.assign({}, DEFAULT_PREFS, decoded);
 }
 
 /* =================================================================
-   7. Язык
+   8. Язык
    ================================================================= */
 function applyLang(code, notify){
   if(!I18N[code]) code = 'ru';
@@ -1224,17 +1450,63 @@ function initLangMenu(){
 function closeLangMenu(){ document.getElementById('langMenu').classList.remove('open'); }
 
 /* =================================================================
-   8. Сборка экранов
+   9. Экран «Монтаж»
    ================================================================= */
-let pick = { style:0, color:0, subs:[0,0,0], fmt:0, music:1 };
+function accentHex(){
+  const a = prefs.accent === 'auto' ? (STYLE_DEFAULT_ACCENT[prefs.style] || 'gold') : prefs.accent;
+  return ACCENT_HEX[a] || ACCENT_HEX.gold;
+}
+
+function buildStyles(){
+  const pv = accentHex();
+  document.getElementById('styleGrid').innerHTML = STYLE_CARDS.map(s=>{
+    // у каждой карточки свой цвет по умолчанию, но выбранный акцент — у всех
+    const col = prefs.accent === 'auto' ? ACCENT_HEX[STYLE_DEFAULT_ACCENT[s.id]] : pv;
+    return `<div class="stc ${prefs.style === s.id ? 'sel' : ''}" onclick="setPref('style','${s.id}')" style="--pv:${col}">
+      <div class="ph">${s.cap()}</div>
+      <div class="nm">${t(s.key)}</div>
+      <div class="ds">${t(s.hint)}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildAccents(){
+  const items = ACCENT_LIST.map(id=>{
+    const dot = id === 'auto' ? 'conic-gradient(#FFC13B,#3DFF7A,#4DB8FF,#FF5FD2,#FFC13B)' : ACCENT_HEX[id];
+    const label = id === 'auto' ? t('acAuto') : '';
+    return `<button class="chip ${prefs.accent === id ? 'sel' : ''}" onclick="setPref('accent','${id}')" aria-label="${id}">
+      <span class="dot" style="background:${dot};width:16px;height:16px"></span>${label}</button>`;
+  });
+  document.getElementById('accentRow').innerHTML = items.join('');
+}
+
+function buildBackgrounds(){
+  const NAMES = { none:'bgNone', blur:'bgBlur', dark:'bgDark', green:'bgGreen', warm:'bgWarm' };
+  document.getElementById('bgRow').innerHTML = BG_LIST.map(id=>
+    `<div class="bgc ${prefs.bg === id ? 'sel' : ''}" onclick="setPref('bg','${id}')">
+       <div class="tile bg-${id}"></div><div class="nm">${t(NAMES[id])}</div></div>`).join('');
+  document.getElementById('bgHint').textContent = prefs.bg === 'none' ? t('bgHintNone') : t('bgHint');
+}
+
+function buildMusic(){
+  document.getElementById('moodRow').innerHTML = MOODS.map(m=>
+    `<button class="chip ${prefs.mood === m.id ? 'sel' : ''}" onclick="setPref('mood','${m.id}')">
+       <span class="dot" style="background:${m.dot};${m.id==='none'?'border:1.5px solid var(--muted)':''}"></span>${t(m.key)}</button>`).join('');
+  const show = prefs.mood !== 'none';
+  document.getElementById('musicRow').innerHTML = show ?
+    `<div class="mrow" onclick="cycleMusic()">
+       <span class="itile c6">${icon('volume',17)}</span>
+       <span style="font-weight:700;font-size:14px;">${t('musicVol')}</span>
+       <span class="val">${t(prefs.music)}</span>
+     </div>` : '';
+}
 
 function buildFormats(){
-  const BOX = 34;   // высота значка пропорции, пиксели
-  document.getElementById('fmtRow').innerHTML = FORMATS.map((f,i)=>{
-    // вписываем прямоугольник в квадрат BOX×BOX, сохраняя пропорцию
+  const BOX = 34;
+  document.getElementById('fmtRow').innerHTML = FORMATS.map(f=>{
     const scale = BOX / Math.max(f.w, f.h);
     const w = Math.round(f.w * scale), h = Math.round(f.h * scale);
-    return `<div class="fmt ${i===pick.fmt?'sel':''}" onclick="setFmt(${i})">
+    return `<div class="fmt ${prefs.format === f.id ? 'sel' : ''}" onclick="setPref('format','${f.id}')">
       <div style="height:${BOX}px;display:flex;align-items:center;">
         <div class="shape" style="width:${w}px;height:${h}px;"></div>
       </div>
@@ -1242,81 +1514,59 @@ function buildFormats(){
       <div class="sub">${t(f.sub)}</div>
     </div>`;
   }).join('');
-
-  // превью принимает выбранную пропорцию — видно, каким будет кадр
-  const f = FORMATS[pick.fmt];
-  const prev = document.querySelector('.preview');
-  prev.style.aspectRatio = `${f.w}/${f.h}`;
-  prev.style.maxHeight = (f.h >= f.w) ? '320px' : 'none';
 }
 
-function buildAudio(){
-  document.getElementById('audioRow').innerHTML = AUDIO.map((a,i)=>
-    `<div class="pcard">
-       <button class="q" onclick="toast(t('${a.hint}'))">?</button>
-       <div class="itile ${a.c}">${icon(a.ic,17)}</div>
-       <div class="lbl">${t(a.key)}</div>
-       <label class="sw"><input type="checkbox" ${a.on?'checked':''} onchange="AUDIO[${i}].on=this.checked"><i></i></label>
+function buildToggles(){
+  document.getElementById('toggleList').innerHTML = TOGGLES.map(x=>
+    `<div class="trow">
+       <span class="itile ${x.c}">${icon(x.ic,17)}</span>
+       <div class="tx"><div class="tt">${t(x.key)}</div><div class="th">${t(x.hint)}</div></div>
+       <label class="sw"><input type="checkbox" ${prefs[x.id] ? 'checked' : ''}
+         onchange="prefs['${x.id}']=this.checked;haptic('light')"><i></i></label>
      </div>`).join('');
-
-  document.getElementById('musicRow').innerHTML =
-    `<div class="mrow" onclick="cycleMusic()">
-       <span class="itile c6">${icon('volume',17)}</span>
-       <span style="font-weight:700;font-size:14px;">${t('musicVol')}</span>
-       <span class="val">${t(MUSIC_LEVELS[pick.music])}</span>
-     </div>`;
 }
 
-function setFmt(i){ pick.fmt = i; haptic('light'); buildFormats(); }
-function cycleMusic(){
-  pick.music = (pick.music + 1) % MUSIC_LEVELS.length;
-  haptic('light'); buildAudio();
+function buildSeg(id, list, field, labels){
+  document.getElementById(id).innerHTML = list.map((v, i)=>
+    `<button class="${prefs[field] === v ? 'sel' : ''}" onclick="setPref('${field}','${v}')">${labels[i]}</button>`).join('');
 }
 
 function buildEditor(){
+  buildStyles();
+  buildAccents();
+  buildBackgrounds();
+  buildMusic();
   buildFormats();
-  buildAudio();
-  document.getElementById('styleRow').innerHTML = STYLES.map((s,i)=>
-    `<button class="chip ${i===pick.style?'sel':''}" onclick="setStyle(${i})">${s}</button>`).join('');
+  buildToggles();
+  buildSeg('cleanSeg', CLEAN_LIST, 'clean', [t('clAuto'), t('clOn'), t('clOff')]);
+  buildSeg('speechSeg', SPEECH_LIST, 'speech', [t('spAuto'), 'Русский', 'Тоҷикӣ', 'English']);
+}
 
-  document.getElementById('colorRow').innerHTML = COLORS.map((c,i)=>
-    `<button class="chip ${i===pick.color?'sel':''}" onclick="setColor(${i})">
-       <span class="dot" style="background:${c.dot}"></span>${t(c.key)}</button>`).join('');
-
-  // .scard — div, а не button: вложенная кнопка «?» внутри <button> ломает разметку
-  document.getElementById('subsRow').innerHTML = SUBS.map((s,i)=>
-    `<div class="scard" onclick="cycleSub(${i})">
-       <button class="q" onclick="event.stopPropagation();toast(t('${s.hint}'))">?</button>
-       <div class="itile ${s.c}">${icon(s.ic,17)}</div>
-       <div class="lbl">${t(s.key)}</div>
-       <div class="val">${t(s.opts[pick.subs[i]])}</div>
-     </div>`).join('');
-
-  document.getElementById('paramRow').innerHTML = PARAMS.map((p,i)=>
-    `<div class="pcard">
-       ${p.isNew ? '<span class="badge-new">NEW</span>' : ''}
-       <button class="q" onclick="toast(t('${p.hint}'))">?</button>
-       <div class="itile ${p.c}">${icon(p.ic,17)}</div>
-       <div class="lbl">${t(p.key)}</div>
-       <label class="sw"><input type="checkbox" ${p.on?'checked':''} onchange="PARAMS[${i}].on=this.checked"><i></i></label>
-     </div>`).join('');
+function setPref(field, value){
+  prefs[field] = value;
+  haptic('light');
+  buildEditor();
+}
+function cycleMusic(){
+  const i = LEVEL_LIST.indexOf(prefs.music);
+  prefs.music = LEVEL_LIST[(i + 1) % LEVEL_LIST.length];
+  haptic('light'); buildMusic();
 }
 
 function buildMenu(){
+  const MENU = [
+    {key:'mTopUp',   ic:'coins',     c:'c1', act:"go('balance')"},
+    {key:'mSupport', ic:'chat',      c:'c2', act:"go('support')"},
+    {key:'mPartner', ic:'invite',    c:'c3', act:"go('ref')"},
+    {key:'mChannel', ic:'megaphone', c:'c4', act:"openChannel()"},
+  ];
   document.getElementById('profMenu').innerHTML = MENU.map(m=>
     `<button onclick="${m.act}"><span class="itile ${m.c}">${icon(m.ic,17)}</span><span>${t(m.key)}</span><span class="arr">›</span></button>`
   ).join('');
 }
 
-function setStyle(i){ pick.style = i; haptic('light'); buildEditor(); }
-function setColor(i){ pick.color = i; haptic('light'); buildEditor(); }
-function cycleSub(i){
-  pick.subs[i] = (pick.subs[i] + 1) % SUBS[i].opts.length;
-  haptic('light'); buildEditor();
-}
-
 /* =================================================================
-   9. Навигация
+   10. Навигация
    ================================================================= */
 const TABS = ['ref','videos','editor','balance','profile'];
 function go(id){
@@ -1332,7 +1582,7 @@ function go(id){
 }
 
 /* =================================================================
-   10. Данные
+   11. Данные на экране
    ================================================================= */
 function plural(n, one, few, many){
   const a = n % 100, b = n % 10;
@@ -1357,64 +1607,119 @@ function wEdits(n){
   return n === 1 ? 'edit' : 'edits';
 }
 
+function fmtDate(ts){
+  const d = new Date(ts * 1000);
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+}
+function fmtWhen(ts){
+  const d = new Date(ts * 1000);
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function subActive(){ return state.sub && state.sub > Date.now() / 1000; }
+
 function render(){
   // у своих вместо цифры — знак безлимита
   const chip = isVip ? '∞' : money(state.balance);
-  document.getElementById('balChip').textContent     = chip;
-  document.getElementById('navBadge').textContent    = chip;
-  document.getElementById('balBig').textContent      = chip;
-  document.getElementById('balEditor').textContent   = isVip
-    ? t('vipShort') : state.balance + ' ' + wTokens(state.balance);
-  document.getElementById('refCount').textContent    = state.refCount;
-  document.getElementById('refEarn').textContent     = money(state.refEarn);
+  document.getElementById('balChip').textContent  = chip;
+  document.getElementById('navBadge').textContent = chip;
+  document.getElementById('balBig').textContent   = chip;
+  document.getElementById('refCount').textContent = state.refCount;
+  document.getElementById('refEarn').textContent  = money(state.refEarn);
   document.getElementById('profRenders').textContent = state.renders;
+  document.getElementById('vidCount').textContent = Math.max(state.vc, state.videos.length);
   document.querySelector('#balance .bal-big .u').textContent =
     isVip ? '' : wTokens(state.balance);
+
+  // подпись под главной кнопкой — одна и та же, как ни открыли приложение
+  let note;
+  if(isVip) note = t('noteVip');
+  else if(subActive()) note = t('noteSub').replace('{d}', fmtDate(state.sub));
+  else if(freeAvailable) note = t('noteFree');
+  else if(state.balance >= PRICE) note = t('noteBal').replace('{b}', money(state.balance));
+  else note = t('noteEmpty');
+  document.getElementById('heroNote').innerHTML = note;
 
   const k = Math.floor(state.balance / PRICE);
   document.getElementById('balEnough').textContent = isVip
     ? t('vipNote') : `${t('enough')} ${k} ${wEdits(k)}`;
+  const subOn = document.getElementById('subOn');
+  subOn.style.display = (!isVip && subActive()) ? '' : 'none';
+  subOn.innerHTML = subActive() ? t('subOn').replace('{d}', fmtDate(state.sub)) : '';
 
-  // своим пакеты не нужны — прячем блок покупки.
-  // Без return: ниже ещё отрисовывается список роликов.
+  // своим пакеты не нужны — прячем блок покупки
   const hide = isVip ? 'none' : '';
-  document.querySelector('#balance .section-title').style.display = hide;
-  document.querySelector('[data-i18n="chooseHint"]').style.display = hide;
-  document.querySelector('[data-i18n="payNote"]').style.display = hide;
+  document.getElementById('buyTitle').style.display = hide;
+  document.getElementById('payNoteP').style.display = hide;
+  document.getElementById('offerNote').style.display = hide;
+  document.getElementById('offerNote').innerHTML =
+    `${t('offerNote')} <a onclick="openDoc('offer','pay')">${t('offerLink')}</a>`;
 
-  document.getElementById('packList').innerHTML = isVip ? '' : PACKAGES.map(p=>`
+  const S = SUBSCRIPTION;
+  const subCard = `
+    <div class="pack subc ${subActive() ? 'on' : ''}" onclick="buy('${S.id}')">
+      <span class="badge">${t('subBadge')}</span>
+      <div>
+        <div class="sname">💎 ${t('subTitle')}</div>
+        <div class="sdesc">${t('subDesc').replace('{k}', S.daily)}</div>
+      </div>
+      <div class="right">
+        <div class="price">${priceOf(S)}</div>
+        <div class="per">≈ ${perMonth(S)} ${t('perMonth')}</div>
+      </div>
+    </div>`;
+  document.getElementById('packList').innerHTML = isVip ? '' : subCard + PACKAGES.map(p=>`
     <div class="pack ${p.badge?'hot':''}" onclick="buy('${p.id}')">
       ${p.badge ? `<span class="badge">${t(p.badge)}</span>` : ''}
       <div>
-        <div class="rolls"><span class="pic">${PACK_ICONS[p.id]||''}</span><b>${p.rolls}</b> ${wRolls(p.rolls)}</div>
+        <div class="rolls"><span class="pic">${PACK_ICONS[p.id]||''}</span><b>${p.rolls}</b> ${wEdits(p.rolls)}</div>
         <div class="pname">${t(p.name)}</div>
         <div class="ptok">${money(p.tokens)} ${wTokens(p.tokens)}</div>
       </div>
       <div class="right">
-        <div class="price">${money(p.rub)} ₽</div>
-        <div class="per">${p.per} ₽ ${t('perRoll')}</div>
+        <div class="price">${priceOf(p)}</div>
+        <div class="per">${perOf(p)} ${t('perRoll')}</div>
       </div>
     </div>`).join('');
 
+  // приглашения за неделю
+  const has7 = state.r7 > 0 || state.e7 > 0;
+  document.getElementById('stat7').style.display = has7 ? '' : 'none';
+  document.getElementById('noData7').style.display = has7 ? 'none' : '';
+  document.getElementById('r7').textContent = state.r7;
+  document.getElementById('e7').textContent = money(state.e7);
+
+  // мои видео
   const list = document.getElementById('vidList');
-  const empty = document.getElementById('vidEmpty');
-  if(state.videos.length === 0){ list.innerHTML=''; empty.style.display='block'; }
-  else{
-    empty.style.display = 'none';
-    list.innerHTML = state.videos.map(v=>{
-      const ok = v.status === 'ok';
-      return `<div class="vid">
-        <div class="thumb">${icon('play',20)}</div>
-        <div><div class="nm">${v.name}</div>
-        <div class="muted">${ok ? t('dReady') : t('dWork')}</div></div>
-        <span class="st ${ok?'ok':'wait'}">${ok ? t('stReady') : t('stWork')}</span>
-      </div>`;
-    }).join('');
-  }
+  const vids = state.videos || [];
+  document.getElementById('vidEmpty').style.display = vids.length ? 'none' : '';
+  document.getElementById('vidHint').style.display = vids.length ? '' : 'none';
+  list.innerHTML = vids.map(v => {
+    const sid = STYLE_LIST[v.style] || 'auto';
+    const card = STYLE_CARDS.find(c => c.id === sid) || STYLE_CARDS[0];
+    const dur = `${Math.floor(v.dur / 60)}:${String(v.dur % 60).padStart(2, '0')}`;
+    return `<div class="vid" onclick="openVideo(${v.id})">
+      <div class="thumb" style="background:${VID_COVER[sid] || VID_COVER.auto}">${t(card.key)}</div>
+      <div style="min-width:0"><div class="nm">${t('vidName')} #${v.id}</div>
+        <div class="muted">${t(card.key)} · ${dur} · ${fmtWhen(v.at)}</div></div>
+      <span class="st">${t('vidOpen')}</span>
+    </div>`;
+  }).join('');
 }
+/* значки пакетов — те же, что в боте */
+const PACK_ICONS = { p3:'🌱', p5:'⚡', p10:'🚀', p25:'🔥', p50:'👑' };
+/* обложки роликов в списке — в цветах стиля */
+const VID_COVER = {
+  auto:    'linear-gradient(160deg,#5A3A12,#1A1410)',
+  studio:  'linear-gradient(160deg,#4A3E33,#141210)',
+  type:    'linear-gradient(160deg,#2B2B2B,#101010)',
+  expert:  'linear-gradient(160deg,#16306A,#0A1020)',
+};
+
 
 /* =================================================================
-   11. Действия
+   12. Действия
    ================================================================= */
 function toast(msg){
   const el = document.getElementById('toast');
@@ -1425,92 +1730,92 @@ function toast(msg){
 
 /* Файл грузится не через приложение, а прямо боту в чат: мини-приложению
    для загрузки нужен свой сервер с https, которого у нас нет.
-   Поэтому закрываем окно и возвращаем человека в переписку с ботом. */
+   Закрываем окно — человек сразу в переписке и жмёт скрепку. */
 function askVideo(){
   haptic('medium');
   toast(t('tFile'));
-  if(tg){ setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 1400); }
+  if(tg){ setTimeout(()=>{ try{ tg.close(); }catch(e){} }, 1200); }
 }
 
-/* Все настройки в коротком коде для ссылки.
-   Telegram разрешает в такой ссылке не больше 64 символов,
-   поэтому каждое значение занимает один символ. */
-const B36 = '0123456789abcdefghijklmnopqrstuvwxyz';
-
-function settingsCode(){
-  const bits = arr => arr.reduce((acc, on, i) => acc | (on ? 1 << i : 0), 0);
-  const p = bits(PARAMS.map(x => x.on));          // 7 переключателей -> 0..127
-  const a = bits(AUDIO.map(x => x.on));           // 4 переключателя  -> 0..15
-  const cut = document.querySelector('.cutrow input').checked ? 1 : 0;
-  const nums = [
-    pick.fmt, pick.style, pick.color,
-    pick.subs[0], pick.subs[1], pick.subs[2],
-    Math.floor(p / 36), p % 36,                   // 7 бит не влезают в один символ
-    a, pick.music, cut, Math.max(0, LANGS.indexOf(lang)),
-  ];
-  return 'm' + nums.map(n => B36[n] || '0').join('');
-}
-
-function startRender(){
+/* Стиль уходит боту двумя путями. sendData — быстрый, но Telegram
+   пропускает его только из нижней клавиатуры. Если не сработало
+   (приложение осталось открытым), отправляем код ссылкой /start. */
+function savePrefs(){
   haptic('medium');
-  if(!isVip && state.balance < PRICE){ toast(t('tNoGems')); go('balance'); return; }
-
-  const opts = {};  PARAMS.forEach(p => opts[p.key] = p.on);
-  const audio = {}; AUDIO.forEach(a => audio[a.key] = a.on);
-
-  if(!tg){ toast(t('tRun')); return; }
-
-  // Обычный способ. Работает, только если приложение открыли кнопкой
-  // нижней клавиатуры — иначе Telegram молча ничего не отправит.
-  try{
-    tg.sendData(JSON.stringify({
-      action:'render', lang:lang,
-      format:FORMATS[pick.fmt].id,
-      style:STYLES[pick.style], color:COLORS[pick.color].key,
-      subs:pick.subs, options:opts,
-      audio:audio, music:MUSIC_LEVELS[pick.music],
-      smart_cut:document.querySelector('.cutrow input').checked
-    }));
-  }catch(e){}
-
-  toast(t('tRun'));
-
-  // Если отправка сработала, приложение уже закрылось и этот код
-  // не выполнится. Остались на экране — значит не сработало,
-  // передаём настройки боту через ссылку.
+  const code = prefsCode();
+  if(userId) storeSet('tez_prefs_' + userId, {code, at: Math.floor(Date.now() / 1000)});
+  toast(t('tSaved'));
+  if(!tg) return;
+  try{ tg.sendData(JSON.stringify({action:'prefs', code})); }catch(e){}
   setTimeout(()=>{
-    if(botName){
-      try{
-        tg.openTelegramLink('https://t.me/' + botName + '?start=' + settingsCode());
-      }catch(e){ toast(t('tOpenBot')); }
-    }else{
-      toast(t('tOpenBot'));
-    }
+    if(botName){ try{ tg.openTelegramLink('https://t.me/' + botName + '?start=' + code); }catch(e){} }
   }, 1200);
 }
 
+/* Оплата прямо в приложении — работает, как бы его ни открыли.
+   Раньше покупка шла через sendData и из синей кнопки молча не работала. */
 function buy(packId){
   haptic('medium');
-  const p = PACKAGES.find(x=>x.id === packId);
+  const isSub = packId === SUBSCRIPTION.id;
+  const p = isSub ? SUBSCRIPTION : PACKAGES.find(x=>x.id === packId);
   if(!p) return;
-  if(tg){
-    // суммы хранятся на сервере — из браузера передаём только id пакета
-    tg.sendData(JSON.stringify({action:'buy', pack:p.id, lang:lang}));
-    toast(t('tPay'));
-  }else{
-    toast(`Demo: ${money(p.tokens)} ${wTokens(p.tokens)} / ${money(p.rub)} ₽`);
+  if(!tg){
+    toast(isSub ? `Demo: ${t('subTitle')} / ${priceOf(p)}`
+                : `Demo: ${money(p.tokens)} ${wTokens(p.tokens)} / ${priceOf(p)}`);
+    return;
   }
+  const slug = invoices[packId];
+  if(slug && tg.openInvoice){
+    try{
+      tg.openInvoice('https://t.me/' + slug, status=>{
+        if(status === 'paid'){
+          const now = Math.floor(Date.now() / 1000);
+          if(isSub) state.sub = Math.max(now, state.sub || 0) + p.days * 86400;
+          else state.balance += p.tokens;
+          freeAvailable = false;
+          state.ts = now;
+          if(userId) storeSet('tez_state_' + userId, {ts:state.ts, balance:state.balance,
+            renders:state.renders, refCount:state.refCount, refEarn:state.refEarn,
+            vip:isVip, free:false, p:prefsCode(), sub:state.sub, videos:state.videos,
+            vc:state.vc, r7:state.r7, e7:state.e7});
+          render(); toast(t('tPaid'));
+        }else if(status === 'failed'){ toast(t('tPayFail')); }
+      });
+      return;
+    }catch(e){}
+  }
+  // запасной путь: бот пришлёт счёт в чат
+  toast(t('tPay'));
+  if(botName){ tg.openTelegramLink('https://t.me/' + botName + '?start=buy_' + packId); }
+  else{ try{ tg.sendData(JSON.stringify({action:'buy', pack:packId, lang:lang})); }catch(e){} }
+}
+
+/* Видео хранит Telegram — бот присылает его в чат по одному нажатию */
+function openVideo(id){
+  haptic('light');
+  if(tg && botName){ tg.openTelegramLink('https://t.me/' + botName + '?start=v_' + id); }
+  else toast(t('vidHint'));
+}
+
+/* История оплат — бот присылает её в чат вместе с помощью по оплате */
+function openHistory(){
+  haptic('light');
+  if(tg && botName){ tg.openTelegramLink('https://t.me/' + botName + '?start=pays'); }
+  else toast(t('soon'));
+}
+
+function becomePartner(){
+  haptic('medium');
+  const base = links.support || 'https://t.me/shorukh_bjj';
+  openLink(base + (base.includes('?') ? '&' : '?') + 'text=' + encodeURIComponent(t('partnerMsg')), 'partner');
 }
 
 function copyRef(){
   const txt = document.getElementById('refLink').textContent;
   haptic('light');
 
-  // Раньше тут стоял try/catch, но он не ловит отказ: буфер обмена
-  // отвечает обещанием. Ошибка улетала в пустоту, а человеку
-  // показывалось «скопировано», хотя ничего не скопировалось.
+  // Буфер обмена отвечает обещанием: try/catch его отказ не ловит.
   const done = () => toast(t('tCopied'));
-
   const oldWay = () => {
     try{
       const ta = document.createElement('textarea');
@@ -1523,7 +1828,6 @@ function copyRef(){
       ok ? done() : toast(t('tCopyFail'));
     }catch(e){ toast(t('tCopyFail')); }
   };
-
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(done).catch(oldWay);
   }else{
@@ -1546,6 +1850,271 @@ function openLink(url, label){
 }
 function openSupport(){ openLink(links.support, 'support'); }
 function openChannel(){ openLink(links.channel, 'channel'); }
+
+/* =================================================================
+   13. ДОКУМЕНТЫ: публичная оферта и политика конфиденциальности
+
+   ===== РЕКВИЗИТЫ ИСПОЛНИТЕЛЯ — ЗАПОЛНИТЬ =====
+   Впишите данные между кавычками. Пустые поля в документах
+   не показываются. Без ФИО и ИНН оферта юридически неполная.
+   ================================================================= */
+const LEGAL = {
+  name:    '',               // ФИО полностью
+  status:  '',               // «самозанятый (плательщик НПД)» или «индивидуальный предприниматель»
+  inn:     '',               // ИНН, 12 цифр
+  ogrnip:  '',               // только для ИП
+  email:   '',               // почта для претензий и запросов о данных
+  support: '@shorukh_bjj',   // поддержка в Telegram
+  bot:     '@Tezmontaj_bot',
+  edition: '03.10.2026',     // дата редакции — меняйте при каждом изменении текста
+};
+
+function operatorText(){
+  if(!LEGAL.name) return `владелец сервиса TEZ (бот ${LEGAL.bot})`;
+  return [LEGAL.name, LEGAL.status, LEGAL.inn && 'ИНН ' + LEGAL.inn,
+          LEGAL.ogrnip && 'ОГРНИП ' + LEGAL.ogrnip].filter(Boolean).join(', ');
+}
+function contactsText(){
+  return [`Telegram: ${LEGAL.support}`, `бот ${LEGAL.bot}`, LEGAL.email && `e-mail: ${LEGAL.email}`]
+    .filter(Boolean).join(', ');
+}
+
+const _h = (id, text) => `<h3${id ? ` id="d-${id}"` : ''}>${text}</h3>`;
+const _p = (...lines) => lines.map(x => `<p>${x}</p>`).join('');
+const _ul = items => `<ul>${items.map(x => `<li>${x}</li>`).join('')}</ul>`;
+
+function priceTable(){
+  const rows = PACKAGES.map(p =>
+    `<tr><td>${p.rolls} ${plural(p.rolls,'монтаж','монтажа','монтажей')} ` +
+    `(${money(p.tokens)} ${plural(p.tokens,'токен','токена','токенов')})</td>` +
+    `<td>${money(p.stars)} ⭐</td></tr>`);
+  rows.push(`<tr><td>Годовая подписка: ${SUBSCRIPTION.days} дней, до ${SUBSCRIPTION.daily} ` +
+            `монтажей в сутки</td><td>${money(SUBSCRIPTION.stars)} ⭐</td></tr>`);
+  return `<table>${rows.join('')}</table>`;
+}
+
+const DOCS = {
+  offer: { key:'offer', body: () =>
+    `<div class="ed">Редакция от ${LEGAL.edition}</div>` +
+    _h('', '1. Общие положения') +
+    _p(`1.1. Настоящий документ — публичная оферта (предложение) ${operatorText()} ` +
+       `(далее — «Исполнитель») заключить договор на оказание услуг автоматического монтажа ` +
+       `видео на изложенных ниже условиях с любым лицом (далее — «Пользователь»).`,
+       `1.2. Акцептом оферты считается любое из действий: отправка видео боту ${LEGAL.bot} ` +
+       `для монтажа либо оплата пакета или подписки. С момента акцепта договор считается ` +
+       `заключённым (п. 3 ст. 438 Гражданского кодекса РФ).`,
+       `1.3. Сервис предназначен для лиц старше 14 лет. Если Пользователю нет 18 лет, ` +
+       `оплачивать услуги он может только с согласия родителей или законных представителей.`) +
+
+    _h('', '2. Термины') +
+    _ul([`<b>Сервис</b> — Telegram-бот ${LEGAL.bot} и мини-приложение TEZ.`,
+         `<b>Монтаж</b> — автоматическая обработка видео Пользователя: расшифровка речи, ` +
+         `субтитры, удаление пауз, кадрирование, музыка, звуковые эффекты, очистка звука.`,
+         `<b>Токены</b> — внутренние расчётные единицы Сервиса. Один монтаж — ${PRICE} токена. ` +
+         `Токены не являются деньгами, не обмениваются на деньги (кроме возврата по разделу 7) ` +
+         `и не передаются другим пользователям.`,
+         `<b>Пакет</b> — набор токенов, приобретаемый за Telegram Stars.`,
+         `<b>Подписка</b> — право на монтаж без списания токенов в течение оплаченного срока.`]) +
+
+    _h('', '3. Предмет договора') +
+    _p(`3.1. Исполнитель оказывает Пользователю услугу автоматического монтажа присланных ` +
+       `видео, а Пользователь оплачивает её на условиях оферты.`,
+       `3.2. Монтаж выполняется программой без участия человека. Результат зависит от ` +
+       `качества исходного видео и звука; Исполнитель не гарантирует безошибочное ` +
+       `распознавание речи, особенно при сильном шуме, акценте или смешении языков.`) +
+
+    _h('', '4. Порядок оказания услуг') +
+    _p(`4.1. Пользователь отправляет видео в чат с ботом. Требования: продолжительность до ` +
+       `3 минут, размер до 20 МБ (ограничение Telegram), форматы mp4, mov, m4v, webm, mkv, avi.`,
+       `4.2. Монтаж начинается автоматически. Обычный срок — от одной до нескольких минут; ` +
+       `при очереди — дольше.`,
+       `4.3. Готовое видео присылается в тот же чат и сохраняется в разделе «Мои видео». ` +
+       `Услуга считается оказанной в момент отправки готового видео.`,
+       `4.4. Повторный монтаж того же видео («Другой вариант», «Другой стиль») оплачивается ` +
+       `как новый монтаж.`) +
+
+    _h('pay', '5. Стоимость и оплата') +
+    _p(`5.1. Действующие цены:`) + priceTable() +
+    _p(`5.2. Оплата производится через платёжную систему Telegram в Telegram Stars. ` +
+       `Исполнитель не получает и не хранит данные банковских карт.`,
+       `5.3. Первое видео нового пользователя монтируется бесплатно, с надписью TEZ ` +
+       `(пробный монтаж). Пробный монтаж не предоставляется, если на балансе уже есть ` +
+       `токены для монтажа или действует подписка.`,
+       `5.4. Токены зачисляются сразу после оплаты и не имеют срока действия.`,
+       `5.5. Подписка действует ${SUBSCRIPTION.days} дней с момента оплаты; при покупке до ` +
+       `окончания текущей срок продлевается. В течение срока монтаж выполняется без списания ` +
+       `токенов, но не более ${SUBSCRIPTION.daily} видео за 24 часа; сверх этого — за токены.`,
+       `5.6. Исполнитель вправе изменять цены. Изменения не касаются уже оплаченных пакетов ` +
+       `и подписок.`) +
+
+    _h('', '6. Права и обязанности сторон') +
+    _p(`6.1. Пользователь гарантирует, что обладает правами на присылаемые видео, что видео ` +
+       `не нарушает права третьих лиц и законодательство и не содержит запрещённых материалов.`,
+       `6.2. Права на исходное и готовое видео принадлежат Пользователю. Исполнитель ` +
+       `использует видео только для монтажа и не публикует его.`,
+       `6.3. В монтаже используется музыка из библиотеки Исполнителя, распространяемая на ` +
+       `условиях, допускающих использование в коммерческих видео, и шрифты под лицензией ` +
+       `SIL Open Font License.`,
+       `6.4. Исполнитель вправе отказать в обработке видео, нарушающего п. 6.1, и ограничить ` +
+       `доступ при злоупотреблениях (накрутка бонусов, попытки обхода оплаты). Токены, ` +
+       `полученные в результате злоупотребления, аннулируются.`,
+       `6.5. Исполнитель поддерживает работоспособность Сервиса, но не гарантирует его ` +
+       `бесперебойную работу (технические работы, сбои Telegram или интернета).`) +
+
+    _h('refund', '7. Возвраты') +
+    _p(`7.1. Если монтаж не удался по технической причине, списанные токены автоматически ` +
+       `возвращаются на баланс.`,
+       `7.2. Пакет можно вернуть в течение 14 дней с момента оплаты, если из него не ` +
+       `израсходовано ни одного токена; подписку — в течение 14 дней, если по ней не выполнено ` +
+       `ни одного монтажа. Для возврата — команда /paysupport в боте или сообщение в поддержку. ` +
+       `Возврат производится в Telegram Stars на счёт, с которого была оплата.`,
+       `7.3. Частично использованные пакеты и подписки возврату не подлежат, кроме случаев, ` +
+       `когда услуга не была оказана по вине Исполнителя.`,
+       `7.4. Бонусные токены (реферальные начисления, пробный монтаж) возврату и обмену ` +
+       `не подлежат.`) +
+
+    _h('ref', '8. Реферальная программа') +
+    _p(`8.1. Каждый Пользователь получает персональную ссылку-приглашение.`,
+       `8.2. Приглашённым считается пользователь, который впервые запустил бота по этой ` +
+       `ссылке. Пользователи, уже запускавшие бота, приглашёнными не становятся.`,
+       `8.3. С каждой оплаты приглашённого пригласившему начисляется 10% от купленных ` +
+       `токенов (за годовую подписку — ${SUBSCRIPTION.refBonus} токенов). За регистрацию, ` +
+       `запуск бота или бесплатный монтаж приглашённого токены не начисляются.`,
+       `8.4. Если оплата приглашённого возвращена, начисленный за неё бонус списывается.`,
+       `8.5. Запрещено приглашать самого себя, создавать фиктивные аккаунты и иным образом ` +
+       `накручивать бонусы. При нарушении бонусы аннулируются.`,
+       `8.6. Денежное вознаграждение партнёрам (15% с оплат приглашённых) выплачивается ` +
+       `самозанятым и индивидуальным предпринимателям по отдельному договору.`) +
+
+    _h('', '9. Ответственность') +
+    _p(`9.1. Сервис предоставляется «как есть». Ответственность Исполнителя ограничена ` +
+       `стоимостью оплаченной услуги.`,
+       `9.2. Исполнитель не отвечает за то, как Пользователь использует готовое видео, и за ` +
+       `решения площадок (Instagram, TikTok, YouTube и др.) о его публикации.`) +
+
+    _h('', '10. Персональные данные') +
+    _p(`Обработка персональных данных — согласно Политике конфиденциальности ` +
+       `(Профиль → Документы, команда /privacy в боте).`) +
+
+    _h('', '11. Прочие условия') +
+    _p(`11.1. Исполнитель вправе изменять оферту. Новая редакция действует с момента ` +
+       `публикации в мини-приложении; продолжение использования Сервиса означает согласие с ней.`,
+       `11.2. Споры решаются переговорами. До обращения в суд обязателен претензионный ` +
+       `порядок; срок ответа на претензию — 10 рабочих дней.`,
+       `11.3. К отношениям сторон применяется законодательство Российской Федерации. ` +
+       `Пользователи из других стран сохраняют права, которые им даёт закон их страны ` +
+       `о защите прав потребителей.`) +
+
+    _h('', '12. Исполнитель и контакты') +
+    _p(`Исполнитель: ${operatorText()}.`, `Контакты: ${contactsText()}.`)
+  },
+
+  privacy: { key:'privacy', body: () =>
+    `<div class="ed">Редакция от ${LEGAL.edition}</div>` +
+    _h('', '1. Общие положения') +
+    _p(`1.1. Политика составлена в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ ` +
+       `«О персональных данных» и объясняет, какие данные пользователей сервиса TEZ ` +
+       `(бот ${LEGAL.bot} и мини-приложение) обрабатываются, зачем и как они защищены.`,
+       `1.2. Оператор персональных данных — ${operatorText()} (далее — «Оператор»).`) +
+
+    _h('', '2. Какие данные обрабатываются') +
+    _ul([`данные Telegram-аккаунта: идентификатор (ID), имя, имя пользователя (@username), ` +
+         `язык интерфейса — их передаёт Telegram при обращении к боту;`,
+         `видео и звук, которые пользователь присылает для монтажа, и расшифровка речи из них;`,
+         `готовые ролики — хранятся на серверах Telegram, Оператор хранит только их ` +
+         `идентификаторы, чтобы показать их в разделе «Мои видео»;`,
+         `сведения об оплатах: пакет, сумма в Telegram Stars, дата, идентификатор транзакции ` +
+         `Telegram. Данные банковских карт Оператор не получает;`,
+         `баланс токенов, подписка, история монтажей, выбранный стиль оформления;`,
+         `реферальные связи — кто кого пригласил;`,
+         `технические журналы работы бота: время, действие, ошибки.`]) +
+
+    _h('', '3. Цели обработки') +
+    _ul([`оказание услуги монтажа по публичной оферте;`,
+         `учёт баланса, оплат, подписки и реферальных начислений;`,
+         `ответы на обращения и возвраты;`,
+         `предотвращение злоупотреблений и поддержание работы сервиса.`]) +
+    _p(`Данные не используются для рекламных рассылок и не продаются.`) +
+
+    _h('', '4. Правовые основания') +
+    _p(`Обработка необходима для исполнения договора (публичной оферты), стороной которого ` +
+       `является пользователь (п. 5 ч. 1 ст. 6 Закона № 152-ФЗ), и для исполнения обязанностей ` +
+       `по учёту платежей (п. 2 ч. 1 ст. 6). Отдельное согласие для этих целей не требуется. ` +
+       `Если Оператор захочет обрабатывать данные для других целей, например для рассылок, ` +
+       `он отдельно попросит согласие.`) +
+
+    _h('', '5. Как обрабатывается видео') +
+    _ul([`видео загружается на компьютер Оператора только на время монтажа;`,
+         `распознавание речи, поиск лица в кадре и очистка звука выполняются программами на ` +
+         `компьютере Оператора — видео не передаётся сторонним сервисам и нейросетям в интернете;`,
+         `поиск лица нужен только для того, чтобы текст не закрывал лицо. Лица не ` +
+         `распознаются как конкретные люди, биометрические данные не собираются и не хранятся;`,
+         `исходный и промежуточные файлы удаляются сразу после монтажа; копия готового видео ` +
+         `в полном качестве хранится до 6 часов (для кнопки «Файлом, без сжатия») и удаляется.`]) +
+
+    _h('', '6. Передача данных') +
+    _p(`Данные не передаются третьим лицам, кроме:`) +
+    _ul([`Telegram — платформы, через которую работает сервис и проходят платежи;`,
+         `GitHub — хостинга мини-приложения: при открытии приложения GitHub получает ` +
+         `технические данные запроса (IP-адрес и адрес страницы, в котором для показа ` +
+         `передаются ID пользователя и баланс);`,
+         `Google Fonts — загрузки шрифтов приложения (IP-адрес);`,
+         `государственных органов — по требованию, предусмотренному законом.`]) +
+    _p(`Telegram, GitHub и Google находятся за пределами Российской Федерации; ` +
+       `пользуясь Telegram и мини-приложением, пользователь передаёт им данные на их условиях.`) +
+
+    _h('', '7. Сроки хранения') +
+    _ul([`данные аккаунта и баланс — пока пользователь пользуется сервисом;`,
+         `сведения об оплатах — в течение срока, установленного законодательством ` +
+         `о бухгалтерском и налоговом учёте (до 5 лет);`,
+         `история монтажей и ссылки на готовые ролики — до удаления пользователем ` +
+         `(команда /deleteme) или прекращения работы сервиса;`,
+         `технические журналы — до 30 дней.`]) +
+
+    _h('rights', '8. Права пользователя') +
+    _p(`Пользователь вправе получить сведения о своих данных, потребовать их уточнения ` +
+       `или удаления. Команда /deleteme в боте сразу удаляет историю видео и настройки; ` +
+       `остальные запросы — через поддержку ${LEGAL.support}` +
+       `${LEGAL.email ? ` или по e-mail ${LEGAL.email}` : ''}. Ответ — в течение 10 рабочих дней. ` +
+       `Действия Оператора можно обжаловать в Роскомнадзоре или в суде.`) +
+
+    _h('', '9. Защита данных') +
+    _p(`База данных и ключ доступа к боту хранятся на компьютере Оператора и не публикуются; ` +
+       `доступ к ним есть только у Оператора. Обмен данными с Telegram идёт по защищённому ` +
+       `соединению (HTTPS).`) +
+
+    _h('', '10. Данные на устройстве') +
+    _p(`Мини-приложение сохраняет в памяти устройства (localStorage) язык, тему, выбранный ` +
+       `стиль и последние показанные данные — чтобы открываться быстрее. Рекламные и ` +
+       `аналитические cookies не используются.`) +
+
+    _h('', '11. Изменения политики') +
+    _p(`Новая редакция действует с момента публикации. Актуальная версия — в мини-приложении ` +
+       `(Профиль → Документы) и по команде /privacy в боте.`) +
+
+    _h('', '12. Контакты Оператора') +
+    _p(`${operatorText()}. ${contactsText()}.`)
+  },
+};
+
+let docReturn = 'profile';
+function openDoc(id, anchor){
+  const d = DOCS[id];
+  if(!d) return;
+  const cur = document.querySelector('.screen.active');
+  if(cur && cur.id !== 'doc') docReturn = cur.id;
+  document.getElementById('docTitle').textContent = t(d.key);
+  document.getElementById('docBody').innerHTML =
+    (lang !== 'ru' ? `<div class="note">${t('docRuNote')}</div>` : '') + d.body();
+  go('doc');
+  if(anchor){
+    setTimeout(()=>{
+      const el = document.getElementById('d-' + anchor);
+      if(el){ el.scrollIntoView({behavior:'smooth', block:'start'}); el.classList.add('flash'); }
+    }, 120);
+  }
+}
+function closeDoc(){ go(docReturn || 'profile'); }
 
 /* ===================== Старт ===================== */
 initLangMenu();
