@@ -228,6 +228,13 @@
   .bg-green{background:radial-gradient(ellipse at 50% 36%,#165C46,#06140F 72%);}
   .bg-warm {background:radial-gradient(ellipse at 50% 36%,#6E3A16,#160C06 72%);}
   .bg-hint{font-size:12px;color:var(--muted);margin:8px 2px 0;line-height:1.4;}
+  /* фильтры цвета: тот же мини-кадр, перекрашенный как на видео */
+  .lk-none  .tile{}
+  .lk-cinema .tile{filter:contrast(1.1) saturate(.85) sepia(.15) hue-rotate(-12deg);}
+  .lk-warm  .tile{filter:sepia(.35) saturate(1.15);}
+  .lk-cold  .tile{filter:saturate(.85) hue-rotate(18deg) brightness(1.02);}
+  .lk-bw    .tile{filter:grayscale(1) contrast(1.15);}
+  .lk-vivid .tile{filter:saturate(1.5) contrast(1.06);}
 
   /* переключатели «что делать с видео» */
   .tlist{background:var(--card);border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden;}
@@ -550,6 +557,9 @@
       <div class="bg-grid" id="bgRow"></div>
       <div class="bg-hint" id="bgHint"></div>
 
+      <div class="section-title" data-i18n="lookTitle">Фильтр цвета</div>
+      <div class="bg-grid" id="lookRow" style="grid-template-columns:repeat(6,1fr)"></div>
+
       <div class="section-title" data-i18n="musicTitle">Музыка</div>
       <div class="scroller" id="moodRow"></div>
       <div id="musicRow"></div>
@@ -860,13 +870,15 @@ const CLEAN_LIST  = ['auto','on','off'];
 const SPEECH_LIST = ['auto','ru','tg','en'];
 // Фон за человеком (BG_LIST в bot.py). Новые — только в конец списка
 const BG_LIST     = ['none','blur','dark','green','warm'];
+// Фильтр цвета (LOOK_LIST в bot.py). Новые — только в конец
+const LOOK_LIST   = ['none','cinema','warm','cold','bw','vivid'];
 // Порядок важен: по нему язык кодируется в ссылку для бота (LANG_LIST в bot.py)
 const LANGS = ['ru', 'tg', 'en'];
 
 const DEFAULT_PREFS = {
   format:'9:16', style:'auto', accent:'auto', mood:'auto', music:'mNormal',
   captions:true, hook:true, cut:true, effects:true, sfx:true, clean:'auto', speech:'auto',
-  bg:'none',
+  bg:'none', look:'none', broll:true,
 };
 let prefs = Object.assign({}, DEFAULT_PREFS);
 
@@ -904,6 +916,7 @@ const TOGGLES = [
   {id:'cut',      key:'tgCut',      hint:'hgCut',      ic:'scissors', c:'c3'},
   {id:'effects',  key:'tgEffects',  hint:'hgEffects',  ic:'layers',   c:'c4'},
   {id:'sfx',      key:'tgSfx',      hint:'hgSfx',      ic:'volume',   c:'c5'},
+  {id:'broll',    key:'tgBroll',    hint:'hgBroll',    ic:'layers',   c:'c2'},
 ];
 
 function prefsCode(){
@@ -913,22 +926,25 @@ function prefsCode(){
     ACCENT_LIST.indexOf(prefs.accent), MOOD_LIST.indexOf(prefs.mood),
     LEVEL_LIST.indexOf(prefs.music), flags, CLEAN_LIST.indexOf(prefs.clean),
     SPEECH_LIST.indexOf(prefs.speech), Math.max(0, LANGS.indexOf(lang)),
-    Math.max(0, BG_LIST.indexOf(prefs.bg)),
+    Math.max(0, BG_LIST.indexOf(prefs.bg)), Math.max(0, LOOK_LIST.indexOf(prefs.look)),
+    prefs.broll === false ? 1 : 0,
   ];
   return 's' + nums.map(n => B36[Math.max(0, n)] || '0').join('');
 }
 
 function decodePrefs(code){
-  // 11 знаков; старые ссылки на 10 знаков — без фона («как есть»)
-  if(!code || code[0] !== 's' || (code.length !== 11 && code.length !== 10)) return null;
+  // 13 знаков; старые ссылки на 10–12 знаков — без фона, фильтра, вставок (по умолчанию)
+  if(!code || code[0] !== 's' || code.length < 10 || code.length > 13) return null;
   const n = code.slice(1).split('').map(ch => B36.indexOf(ch));
   if(n.some(x => x < 0)) return null;
-  if(n.length < 10) n.push(0);
+  while(n.length < 12) n.push(0);
+  if(n[11] > 1) return null;
   const pick = (lst, i) => n[i] < lst.length ? lst[n[i]] : null;
   const out = {
     format:pick(FMT_LIST,0), style:pick(STYLE_LIST,1), accent:pick(ACCENT_LIST,2),
     mood:pick(MOOD_LIST,3), music:pick(LEVEL_LIST,4), clean:pick(CLEAN_LIST,6),
-    speech:pick(SPEECH_LIST,7), bg:pick(BG_LIST,9),
+    speech:pick(SPEECH_LIST,7), bg:pick(BG_LIST,9), look:pick(LOOK_LIST,10),
+    broll: n[11] === 0,
   };
   FLAG_KEYS.forEach((k, i) => out[k] = !!(n[5] >> i & 1));
   if(Object.values(out).some(v => v === null) || n[5] > 31) return null;
@@ -957,6 +973,8 @@ const I18N = {
     accentTitle:'Цвет акцента', acAuto:'Авто',
     bgTitle:'Фон за вами', bgNone:'Как есть', bgBlur:'Размыть', bgDark:'Тёмный',
     bgGreen:'Зелёный', bgWarm:'Тёплый',
+    lookTitle:'Фильтр цвета', lkNone:'Без', lkCinema:'Кино', lkWarm:'Тёплый', lkCold:'Холод',
+    lkBw:'Ч/Б', lkVivid:'Сочный',
     bgHintNone:'Нейросеть может отделить вас от фона: размыть его, как в портретном режиме, или поставить студию.',
     bgHint:'Нейросеть отделит вас от фона. Монтаж будет дольше примерно на полминуты.',
     musicTitle:'Музыка', moAuto:'Авто', moEnergetic:'Бодрая', moCalm:'Спокойная', moDramatic:'Напряжённая', moNone:'Без музыки',
@@ -968,6 +986,7 @@ const I18N = {
     tgCut:'Убирать паузы', hgCut:'Только суть — без тишины и заминок',
     tgEffects:'Нарезка и переходы', hgEffects:'Наезды на склейках, «окно», нарезка в бит',
     tgSfx:'Звуковые эффекты', hgSfx:'«Вжух» на переходах',
+    tgBroll:'Вставки по словам', hgBroll:'Сказали «деньги» — на секунду покажем деньги',
     cleanTitle:'Чистка голоса от шума', clAuto:'Авто', clOn:'Всегда', clOff:'Выкл.',
     speechTitle:'Язык речи в видео', spAuto:'Авто',
     saveBtn:'Сохранить стиль', saveNote:'Стиль запомнится для всех следующих видео. Поменять можно в любой момент.',
@@ -1045,6 +1064,8 @@ const I18N = {
     accentTitle:'Ранги таъкид', acAuto:'Худкор',
     bgTitle:'Замина дар паси шумо', bgNone:'Ҳамон тавр', bgBlur:'Хира', bgDark:'Торик',
     bgGreen:'Сабз', bgWarm:'Гарм',
+    lookTitle:'Филтри ранг', lkNone:'Бе', lkCinema:'Кино', lkWarm:'Гарм', lkCold:'Сард',
+    lkBw:'С/С', lkVivid:'Равшан',
     bgHintNone:'Нейросеть метавонад шуморо аз замина ҷудо кунад: заминаро хира кунад ё студия гузорад.',
     bgHint:'Нейросеть шуморо аз замина ҷудо мекунад. Монтаж тақрибан ним дақиқа дарозтар мешавад.',
     musicTitle:'Мусиқӣ', moAuto:'Худкор', moEnergetic:'Пурҷӯш', moCalm:'Ором', moDramatic:'Шиддатнок', moNone:'Бе мусиқӣ',
@@ -1056,6 +1077,7 @@ const I18N = {
     tgCut:'Буридани таваққуфҳо', hgCut:'Танҳо асл — бе хомӯшӣ ва дудилагӣ',
     tgEffects:'Буриш ва гузаришҳо', hgEffects:'Наздикшавӣ дар буриш, «тиреза», буриш бо ритм',
     tgSfx:'Эффектҳои садо', hgSfx:'«Вжух» дар гузаришҳо',
+    tgBroll:'Илова аз рӯи калимаҳо', hgBroll:'Гуфтед «пул» — як сония пул нишон медиҳем',
     cleanTitle:'Тоза кардани овоз аз садои беруна', clAuto:'Худкор', clOn:'Ҳамеша', clOff:'Хомӯш',
     speechTitle:'Забони нутқ дар видео', spAuto:'Худкор',
     saveBtn:'Нигоҳ доштани услуб', saveNote:'Услуб барои ҳамаи видеоҳои навбатӣ нигоҳ дошта мешавад. Ҳар вақт иваз кардан мумкин аст.',
@@ -1133,6 +1155,8 @@ const I18N = {
     accentTitle:'Accent color', acAuto:'Auto',
     bgTitle:'Your background', bgNone:'As is', bgBlur:'Blur', bgDark:'Dark',
     bgGreen:'Green', bgWarm:'Warm',
+    lookTitle:'Color filter', lkNone:'None', lkCinema:'Cinema', lkWarm:'Warm', lkCold:'Cold',
+    lkBw:'B&W', lkVivid:'Vivid',
     bgHintNone:'AI can separate you from the background: blur it like portrait mode or put you in a studio.',
     bgHint:'AI will separate you from the background. Editing takes about half a minute longer.',
     musicTitle:'Music', moAuto:'Auto', moEnergetic:'Energetic', moCalm:'Calm', moDramatic:'Dramatic', moNone:'No music',
@@ -1144,6 +1168,7 @@ const I18N = {
     tgCut:'Remove pauses', hgCut:'Only the essence — no silence or stumbles',
     tgEffects:'Cuts and transitions', hgEffects:'Punch-in cuts, picture window, beat sync',
     tgSfx:'Sound effects', hgSfx:'Whooshes on transitions',
+    tgBroll:'B-roll by words', hgBroll:'Say «money» — we show money for a second',
     cleanTitle:'Voice noise removal', clAuto:'Auto', clOn:'Always', clOff:'Off',
     speechTitle:'Spoken language', spAuto:'Auto',
     saveBtn:'Save style', saveNote:'Your style is applied to all next videos. Change it any time.',
@@ -1342,6 +1367,8 @@ function loadData(){
   botName       = q.get('bot') || '';
   payWith       = q.get('pay') || 'stars';
   userId        = q.get('uid') || '';
+  // вставки по словам работают, только если у бота есть ключ стоковой базы
+  hasBroll      = q.get('br') === '1';
 
   (q.get('iv') || '').split(',').forEach(pair=>{
     const i = pair.indexOf(':');
@@ -1488,6 +1515,13 @@ function buildBackgrounds(){
   document.getElementById('bgHint').textContent = prefs.bg === 'none' ? t('bgHintNone') : t('bgHint');
 }
 
+function buildLooks(){
+  const NAMES = { none:'lkNone', cinema:'lkCinema', warm:'lkWarm', cold:'lkCold', bw:'lkBw', vivid:'lkVivid' };
+  document.getElementById('lookRow').innerHTML = LOOK_LIST.map(id=>
+    `<div class="bgc lk-${id} ${prefs.look === id ? 'sel' : ''}" onclick="setPref('look','${id}')">
+       <div class="tile bg-none"></div><div class="nm">${t(NAMES[id])}</div></div>`).join('');
+}
+
 function buildMusic(){
   document.getElementById('moodRow').innerHTML = MOODS.map(m=>
     `<button class="chip ${prefs.mood === m.id ? 'sel' : ''}" onclick="setPref('mood','${m.id}')">
@@ -1516,8 +1550,10 @@ function buildFormats(){
   }).join('');
 }
 
+let hasBroll = false;
 function buildToggles(){
-  document.getElementById('toggleList').innerHTML = TOGGLES.map(x=>
+  document.getElementById('toggleList').innerHTML = TOGGLES
+    .filter(x => x.id !== 'broll' || hasBroll).map(x=>
     `<div class="trow">
        <span class="itile ${x.c}">${icon(x.ic,17)}</span>
        <div class="tx"><div class="tt">${t(x.key)}</div><div class="th">${t(x.hint)}</div></div>
@@ -1535,6 +1571,7 @@ function buildEditor(){
   buildStyles();
   buildAccents();
   buildBackgrounds();
+  buildLooks();
   buildMusic();
   buildFormats();
   buildToggles();
